@@ -22,13 +22,18 @@
         - wget
         - tmux
 
-    - name: Ensure Projects directory exists
+    - name: Create Project Directory Structure
       file:
-        path: "{{ ansible_user_dir }}/Projects"
+        path: "{{ ansible_user_dir }}/Projects/{{ item }}"
         state: directory
         mode: '0755'
         owner: "{{ ansible_user_id }}"
         group: "{{ ansible_user_id }}"
+      loop:
+        - Code
+        - Study
+        - Lab
+        - Scratch
 
     - name: Install Ubuntu-specific tools
       become: true
@@ -47,4 +52,3 @@
         - { key: "user.name", value: "Hector Alvarez" }
         - { key: "user.email", value: "alvarez.hectorm@outlook.com" }
         - { key: "init.defaultBranch", value: "main" }
-
