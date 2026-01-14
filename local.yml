@@ -1,0 +1,39 @@
+---
+- name: Standardize Laptop Setup
+  hosts: my_laptop
+
+  tasks:
+    - name: Update package cache (Ubuntu/Debian)
+      become: true
+      apt:
+        update_cache: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Install Core Packages
+      become: true
+      package:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - git
+        - curl
+        - htop
+        - vim
+        - wget
+        - tmux
+
+    - name: Ensure Projects directory exists
+      file:
+        path: "{{ ansible_user_dir }}/Projects"
+        state: directory
+        mode: '0755'
+        owner: "{{ ansible_user_id }}"
+        group: "{{ ansible_user_id }}"
+
+    - name: Install Ubuntu-specific tools
+      become: true
+      apt:
+        name:
+          - build-essential
+          - python3-pip
+      when: ansible_os_family == "Debian"
