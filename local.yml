@@ -80,3 +80,27 @@
         - { key: "user.name", value: "Hector Alvarez" }
         - { key: "user.email", value: "alvarez.hectorm@outlook.com" }
         - { key: "init.defaultBranch", value: "main" }
+
+    # --------------------------------------------------------------------------
+    # 4. Security & Access
+    # --------------------------------------------------------------------------
+    - name: Ensure .ssh directory exists
+      file:
+        path: "{{ ansible_user_dir }}/.ssh"
+        state: directory
+        mode: '0700'
+        owner: "{{ ansible_user_id }}"
+        group: "{{ ansible_user_id }}"
+
+    - name: Generate SSH Key (Ed25519)
+      openssh_keypair:
+        path: "{{ ansible_user_dir }}/.ssh/id_ed25519"
+        type: ed25519
+        comment: "{{ ansible_user_id }}@{{ ansible_hostname }}"
+        state: present
+      register: ssh_key_gen
+
+    - name: Display Public Key (Copy this to GitHub)
+      debug:
+        msg: "{{ ssh_key_gen.public_key }}"
+      when: ssh_key_gen.changed
