@@ -1,0 +1,12 @@
+---
+- name: Install Pyenv
+  git:
+    repo: https://github.com/pyenv/pyenv.git
+    dest: "{{ ansible_user_dir }}/.pyenv"
+    update: yes
+
+- name: Install Pyenv Virtualenv Plugin
+  git:
+    repo: https://github.com/pyenv/pyenv-virtualenv.git
+    dest: "{{ ansible_user_dir }}/.pyenv/plugins/pyenv-virtualenv"
+    update: yes

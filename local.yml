@@ -15,5 +15,6 @@
   tasks:
     - import_tasks: tasks/system.yml
     - import_tasks: tasks/filesystem.yml
+    - import_tasks: tasks/pyenv.yml
     - import_tasks: tasks/dotfiles.yml
     - import_tasks: tasks/security.yml

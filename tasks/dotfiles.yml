@@ -7,6 +7,16 @@
       alias cat='batcat'  # Upgrade cat to bat
       neofetch            # Show sys info on login
 
+- name: Configure Pyenv Environment
+  blockinfile:
+    path: "{{ ansible_user_dir }}/.bashrc"
+    marker: "# {mark} ANSIBLE MANAGED: PYENV"
+    block: |
+      export PYENV_ROOT="$HOME/.pyenv"
+      [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+      eval "$(pyenv init -)"
+      eval "$(pyenv virtualenv-init -)"
+
 - name: Configure Git Global Identity
   git_config:
     scope: global
