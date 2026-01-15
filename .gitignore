@@ -1,3 +1,4 @@
 *.retry
 *.log
 .ansible/
+.ansible-lint-cache/

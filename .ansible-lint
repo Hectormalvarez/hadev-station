@@ -1,0 +1,9 @@
+profile: min          # Only catch major errors, ignore style nitpicks
+
+exclude_paths:
+  - .ansible/         # Don't lint the cache folder
+
+skip_list:
+  - fqcn-builtins     # Allow 'apt' instead of 'ansible.builtin.apt'
+  - yaml              # Allow simple formatting
+  - name              # Allow tasks without names (if any)
