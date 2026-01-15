@@ -1,0 +1,15 @@
+---
+- name: Configure Bash Aliases
+  blockinfile:
+    path: "{{ ansible_user_dir }}/.bashrc"
+    block: |
+      # Ansible Managed Configuration
+      alias cat='batcat'  # Upgrade cat to bat
+      neofetch            # Show sys info on login
+
+- name: Configure Git Global Identity
+  git_config:
+    scope: global
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+  loop: "{{ git_config }}"

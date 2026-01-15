@@ -1,0 +1,9 @@
+---
+- name: Create Standard Project Directories
+  file:
+    path: "{{ ansible_user_dir }}/Projects/{{ item }}"
+    state: directory
+    mode: '0755'
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+  loop: "{{ project_folders }}"

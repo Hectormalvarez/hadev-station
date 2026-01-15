@@ -1,85 +1,19 @@
 ---
 # ==============================================================================
 # Playbook: Hadev's Workstation Setup
+# Description: Main entry point. Orchestrates task imports.
 # ==============================================================================
 
 - name: Standardize Laptop Setup
   hosts: my_laptop
 
-  # Load variables from external file
+  # Load variables
   vars_files:
     - vars/main.yml
 
+  # Import Task Lists
   tasks:
-    # --------------------------------------------------------------------------
-    # 1. System Updates & Core Packages
-    # --------------------------------------------------------------------------
-    - name: Update package cache (Debian/Ubuntu)
-      become: true
-      apt:
-        update_cache: yes
-      when: ansible_os_family == "Debian"
-
-    - name: Install Common Utilities
-      become: true
-      package:
-        name: "{{ item }}"
-        state: present
-      loop: "{{ system_packages }}"
-
-    - name: Install Build Dependencies
-      become: true
-      apt:
-        name:
-          - build-essential
-          - python3-pip
-      when: ansible_os_family == "Debian"
-
-    # --------------------------------------------------------------------------
-    # 2. Filesystem & Structure
-    # --------------------------------------------------------------------------
-    - name: Create Standard Project Directories
-      file:
-        path: "{{ ansible_user_dir }}/Projects/{{ item }}"
-        state: directory
-        mode: '0755'
-        owner: "{{ ansible_user_id }}"
-        group: "{{ ansible_user_id }}"
-      loop: "{{ project_folders }}"
-
-    # --------------------------------------------------------------------------
-    # 3. Configuration Management
-    # --------------------------------------------------------------------------
-    - name: Configure Bash Aliases
-      blockinfile:
-        path: "{{ ansible_user_dir }}/.bashrc"
-        block: |
-          # Ansible Managed Configuration
-          alias cat='batcat'  # Upgrade cat to bat
-          neofetch            # Show sys info on login
-
-    - name: Configure Git Global Identity
-      git_config:
-        scope: global
-        name: "{{ item.key }}"
-        value: "{{ item.value }}"
-      loop: "{{ git_config }}"
-
-    # --------------------------------------------------------------------------
-    # 4. Security & Access
-    # --------------------------------------------------------------------------
-    - name: Ensure .ssh directory exists
-      file:
-        path: "{{ ansible_user_dir }}/.ssh"
-        state: directory
-        mode: '0700'
-        owner: "{{ ansible_user_id }}"
-        group: "{{ ansible_user_id }}"
-
-    - name: Generate SSH Key (Ed25519)
-      openssh_keypair:
-        path: "{{ ansible_user_dir }}/.ssh/id_ed25519"
-        type: ed25519
-        comment: "{{ ansible_user_id }}@{{ ansible_hostname }}"
-        state: present
-      register: ssh_key_gen
+    - import_tasks: tasks/system.yml
+    - import_tasks: tasks/filesystem.yml
+    - import_tasks: tasks/dotfiles.yml
+    - import_tasks: tasks/security.yml
