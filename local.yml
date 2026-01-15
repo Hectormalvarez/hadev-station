@@ -1,41 +1,42 @@
 ---
+# ==============================================================================
+# Playbook: Hadev's Workstation Setup
+# Description: Standardizes development environment on Ubuntu/Debian.
+# ==============================================================================
+
 - name: Standardize Laptop Setup
   hosts: my_laptop
 
   tasks:
+
+    # --------------------------------------------------------------------------
+    # 1. System Updates & Core Packages
+    # --------------------------------------------------------------------------
     - name: Update package cache (Ubuntu/Debian)
       become: true
       apt:
         update_cache: yes
       when: ansible_os_family == "Debian"
 
-    - name: Install Core Packages
+    - name: Install Common Utilities
       become: true
       package:
         name: "{{ item }}"
         state: present
       loop:
-        - git
-        - curl
-        - htop
-        - vim
-        - wget
-        - tmux
+        # Essentials
+        - git           # Version control
+        - curl          # Data transfer
+        - wget          # File download
+        - vim           # Text editor
+        - tmux          # Terminal multiplexer
+        - htop          # Process viewer
+        # Modern CLI Enhancements
+        - neofetch      # System info display
+        - bat           # Syntax highlighting for cat
+        - fzf           # Fuzzy file finder
 
-    - name: Create Project Directory Structure
-      file:
-        path: "{{ ansible_user_dir }}/Projects/{{ item }}"
-        state: directory
-        mode: '0755'
-        owner: "{{ ansible_user_id }}"
-        group: "{{ ansible_user_id }}"
-      loop:
-        - Code
-        - Study
-        - Lab
-        - Scratch
-
-    - name: Install Ubuntu-specific tools
+    - name: Install Build Dependencies
       become: true
       apt:
         name:
@@ -43,7 +44,34 @@
           - python3-pip
       when: ansible_os_family == "Debian"
 
-    - name: Configure Git Global Settings
+    # --------------------------------------------------------------------------
+    # 2. Filesystem & Structure
+    # --------------------------------------------------------------------------
+    - name: Create Standard Project Directories
+      file:
+        path: "{{ ansible_user_dir }}/Projects/{{ item }}"
+        state: directory
+        mode: '0755'
+        owner: "{{ ansible_user_id }}"
+        group: "{{ ansible_user_id }}"
+      loop:
+        - Code      # Active development
+        - Study     # Certifications and books
+        - Lab       # VMs and infrastructure
+        - Scratch   # Temporary testing
+
+    # --------------------------------------------------------------------------
+    # 3. Configuration Management
+    # --------------------------------------------------------------------------
+    - name: Configure Bash Aliases
+      blockinfile:
+        path: "{{ ansible_user_dir }}/.bashrc"
+        block: |
+          # Ansible Managed Configuration
+          alias cat='batcat'  # Upgrade cat to bat
+          neofetch            # Show sys info on login
+
+    - name: Configure Git Global Identity
       git_config:
         scope: global
         name: "{{ item.key }}"
