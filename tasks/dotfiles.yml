@@ -1,12 +1,27 @@
 ---
+# ==============================================================================
+# Task: Dotfiles & Shell Configuration
+# ==============================================================================
+
+# 1. General Bash Configuration (Aliases & Appearance)
 - name: Configure Bash Aliases
   blockinfile:
     path: "{{ ansible_user_dir }}/.bashrc"
+    marker: "# {mark} ANSIBLE MANAGED: ALIASES"
     block: |
-      # Ansible Managed Configuration
-      alias cat='batcat'  # Upgrade cat to bat
-      neofetch            # Show sys info on login
+      # CLI Tool Upgrades
+      alias cat='batcat'
+      alias ll='ls -alF'
+      
+      # System Info
+      neofetch
 
+      # FZF Keybindings (Ctrl+R)
+      if [ -f /usr/share/doc/fzf/examples/key-bindings.bash ]; then
+        source /usr/share/doc/fzf/examples/key-bindings.bash
+      fi
+
+# 2. Pyenv Configuration (Python Version Management)
 - name: Configure Pyenv Environment
   blockinfile:
     path: "{{ ansible_user_dir }}/.bashrc"
@@ -17,6 +32,7 @@
       eval "$(pyenv init -)"
       eval "$(pyenv virtualenv-init -)"
 
+# 3. Git Configuration (Global Identity)
 - name: Configure Git Global Identity
   git_config:
     scope: global
