@@ -21,9 +21,12 @@
 
     - import_tasks: tasks/pyenv.yml
       tags: [pyenv]
-
+    
     - import_tasks: tasks/dotfiles.yml
       tags: [dotfiles]
+
+    - import_tasks: tasks/scripts.yml
+      tags: [scripts]
 
     - import_tasks: tasks/security.yml
       tags: [security]

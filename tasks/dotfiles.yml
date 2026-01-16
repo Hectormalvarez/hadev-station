@@ -12,6 +12,9 @@
       # CLI Tool Upgrades
       alias cat='batcat'
       alias ll='ls -alF'
+
+      # User Scripts Path
+      [ -d "$HOME/.local/bin" ] && export PATH="$HOME/.local/bin:$PATH"
       
       # System Info
       fastfetch

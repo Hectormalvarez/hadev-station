@@ -36,6 +36,14 @@ python_build_deps:
   - liblzma-dev
 
 # ------------------------------------------------------------------------------
+# User Scripts (~/.local/bin)
+# ------------------------------------------------------------------------------
+executable_scripts:
+  # { name: "filename", url: "https://raw.github..." }
+  - name: "collect_context"
+    url: "https://raw.githubusercontent.com/Hectormalvarez/collect_context/main/collect_context.sh"
+
+# ------------------------------------------------------------------------------
 # Directory Structure
 # ------------------------------------------------------------------------------
 project_folders:
