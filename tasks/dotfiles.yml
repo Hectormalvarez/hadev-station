@@ -14,7 +14,7 @@
       alias ll='ls -alF'
       
       # System Info
-      neofetch
+      fastfetch
 
       # FZF Keybindings (Ctrl+R)
       if [ -f /usr/share/doc/fzf/examples/key-bindings.bash ]; then
