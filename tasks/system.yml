@@ -4,6 +4,7 @@
   apt:
     update_cache: yes
   when: ansible_os_family == "Debian"
+  tags: [apt_update]
 
 - name: Install Common Utilities
   become: true
@@ -11,11 +12,3 @@
     name: "{{ item }}"
     state: present
   loop: "{{ system_packages }}"
-
-- name: Install Build Dependencies
-  become: true
-  apt:
-    name:
-      - build-essential
-      - python3-pip
-  when: ansible_os_family == "Debian"

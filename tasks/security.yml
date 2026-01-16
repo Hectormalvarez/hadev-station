@@ -6,6 +6,7 @@
     mode: '0700'
     owner: "{{ ansible_user_id }}"
     group: "{{ ansible_user_id }}"
+  tags: [ssh]
 
 - name: Generate SSH Key (Ed25519)
   openssh_keypair:
@@ -14,7 +15,9 @@
     comment: "{{ ansible_user_id }}@{{ ansible_hostname }}"
     state: present
   register: ssh_key_gen
+  tags: [ssh]
 
 - name: Display Public Key
   debug:
     msg: "{{ ssh_key_gen.public_key }}"
+  tags: [ssh]

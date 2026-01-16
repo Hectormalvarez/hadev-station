@@ -14,7 +14,16 @@
   # Import Task Lists
   tasks:
     - import_tasks: tasks/system.yml
+      tags: [system]
+
     - import_tasks: tasks/filesystem.yml
+      tags: [filesystem]
+
     - import_tasks: tasks/pyenv.yml
+      tags: [pyenv]
+
     - import_tasks: tasks/dotfiles.yml
+      tags: [dotfiles]
+
     - import_tasks: tasks/security.yml
+      tags: [security]
