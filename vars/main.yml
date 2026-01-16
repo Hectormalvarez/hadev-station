@@ -6,7 +6,7 @@
 # ------------------------------------------------------------------------------
 # System Packages
 # ------------------------------------------------------------------------------
-system_packages:
+common_packages:
   # Essentials
   - git
   - curl
@@ -18,6 +18,8 @@ system_packages:
   - fastfetch
   - bat
   - fzf
+
+python_build_deps:
   # Pyenv Build Dependencies (Required to compile Python)
   - build-essential
   - libssl-dev

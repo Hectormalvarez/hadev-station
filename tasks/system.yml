@@ -3,12 +3,20 @@
   become: true
   apt:
     update_cache: yes
+    cache_valid_time: 3600 # Don't update if updated in the last hour
   when: ansible_os_family == "Debian"
   tags: [apt_update]
 
 - name: Install Common Utilities
   become: true
   package:
-    name: "{{ item }}"
+    name: "{{ common_packages }}"
     state: present
-  loop: "{{ system_packages }}"
+  tags: [system, common]
+
+- name: Install Python Build Dependencies
+  become: true
+  package:
+    name: "{{ python_build_deps }}"
+    state: present
+  tags: [system, python_deps]
