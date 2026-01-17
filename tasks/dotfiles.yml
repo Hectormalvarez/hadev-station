@@ -47,3 +47,11 @@
         source /usr/share/doc/fzf/examples/key-bindings.bash
       fi
   tags: [aliases]
+
+- name: Configure Starship Prompt
+  blockinfile:
+    path: "{{ ansible_user_dir }}/.bashrc"
+    marker: "# {mark} ANSIBLE MANAGED: STARSHIP"
+    block: |
+      eval "$(starship init bash)"
+  tags: [dotfiles, starship]

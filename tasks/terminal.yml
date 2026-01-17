@@ -1,0 +1,41 @@
+---
+- name: Install font and compression utilities
+  become: true
+  apt:
+    name:
+      - unzip
+      - fontconfig
+    state: present
+  tags: [terminal, fonts]
+
+- name: Create local fonts directory
+  file:
+    path: "{{ ansible_user_dir }}/.local/share/fonts"
+    state: directory
+    mode: '0755'
+  tags: [terminal, fonts]
+
+- name: Download Meslo Nerd Font
+  get_url:
+    url: https://github.com/ryanoasis/nerd-fonts/releases/download/v3.1.1/Meslo.zip
+    dest: "/tmp/Meslo.zip"
+  tags: [terminal, fonts]
+
+- name: Unzip Nerd Font
+  unarchive:
+    src: "/tmp/Meslo.zip"
+    dest: "{{ ansible_user_dir }}/.local/share/fonts"
+    remote_src: yes
+  tags: [terminal, fonts]
+
+- name: Refresh font cache
+  command: fc-cache -fv
+  changed_when: false
+  tags: [terminal, fonts]
+
+- name: Install Starship prompt
+  become: true
+  shell: curl -sS https://starship.rs/install.sh | sh -s -- -y
+  args:
+    creates: /usr/local/bin/starship
+  tags: [terminal, starship]
