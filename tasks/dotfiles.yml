@@ -1,31 +1,12 @@
 ---
-# ==============================================================================
-# Task: Dotfiles & Shell Configuration
-# ==============================================================================
+- name: Configure Git Global Identity
+  git_config:
+    scope: global
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+  loop: "{{ git_config }}"
+  tags: [git]
 
-# 1. General Bash Configuration (Aliases & Appearance)
-- name: Configure Bash Aliases
-  blockinfile:
-    path: "{{ ansible_user_dir }}/.bashrc"
-    marker: "# {mark} ANSIBLE MANAGED: ALIASES"
-    block: |
-      # CLI Tool Upgrades
-      alias cat='batcat'
-      alias ll='ls -alF'
-
-      # User Scripts Path
-      [ -d "$HOME/.local/bin" ] && export PATH="$HOME/.local/bin:$PATH"
-      
-      # System Info
-      fastfetch
-
-      # FZF Keybindings (Ctrl+R)
-      if [ -f /usr/share/doc/fzf/examples/key-bindings.bash ]; then
-        source /usr/share/doc/fzf/examples/key-bindings.bash
-      fi
-  tags: [aliases]
-
-# 2. Pyenv Configuration (Python Version Management)
 - name: Configure Pyenv Environment
   blockinfile:
     path: "{{ ansible_user_dir }}/.bashrc"
@@ -37,11 +18,29 @@
       eval "$(pyenv virtualenv-init -)"
   tags: [pyenv_config]
 
-# 3. Git Configuration (Global Identity)
-- name: Configure Git Global Identity
-  git_config:
-    scope: global
-    name: "{{ item.key }}"
-    value: "{{ item.value }}"
-  loop: "{{ git_config }}"
-  tags: [git]
+- name: Configure NVM Environment
+  blockinfile:
+    path: "{{ ansible_user_dir }}/.bashrc"
+    marker: "# {mark} ANSIBLE MANAGED: NVM"
+    block: |
+      export NVM_DIR="$HOME/.nvm"
+      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+      [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+  tags: [nvm_config]
+
+- name: Configure Bash Aliases
+  blockinfile:
+    path: "{{ ansible_user_dir }}/.bashrc"
+    marker: "# {mark} ANSIBLE MANAGED: ALIASES"
+    block: |
+      alias cat='batcat'
+      alias ll='ls -alF'
+
+      [ -d "$HOME/.local/bin" ] && export PATH="$HOME/.local/bin:$PATH"
+
+      fastfetch
+
+      if [ -f /usr/share/doc/fzf/examples/key-bindings.bash ]; then
+        source /usr/share/doc/fzf/examples/key-bindings.bash
+      fi
+  tags: [aliases]

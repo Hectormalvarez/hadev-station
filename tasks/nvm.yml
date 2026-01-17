@@ -1,0 +1,8 @@
+---
+- name: Install NVM
+  git:
+    repo: https://github.com/nvm-sh/nvm.git
+    dest: "{{ ansible_user_dir }}/.nvm"
+    version: v0.40.1
+    update: yes
+  tags: [nvm]
