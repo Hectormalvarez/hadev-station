@@ -18,6 +18,7 @@ common_packages:
   - fastfetch
   - bat
   - fzf
+  - xclip
 
 python_build_deps:
   # Pyenv Build Dependencies (Required to compile Python)

@@ -36,6 +36,9 @@
       alias cat='batcat'
       alias ll='ls -alF'
 
+      # Clipboard Shortcut (Usage: echo "foo" | clip)
+      alias toclip='xclip -selection clipboard'
+
       [ -d "$HOME/.local/bin" ] && export PATH="$HOME/.local/bin:$PATH"
 
       fastfetch
