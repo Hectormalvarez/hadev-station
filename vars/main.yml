@@ -18,6 +18,8 @@ common_packages:
   - bat
   - fzf
   - xclip
+# Databases
+  - sqlite3
 
 python_build_deps:
   # Pyenv Build Dependencies (Required to compile Python)
