@@ -20,6 +20,9 @@ common_packages:
   - xclip
 # Databases
   - sqlite3
+# Linters
+  - ansible-lint
+  - yamllint
 
 python_build_deps:
   # Pyenv Build Dependencies (Required to compile Python)
