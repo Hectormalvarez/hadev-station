@@ -5,7 +5,7 @@ set -e
 # 1. User Context Detection
 # ==============================================================================
 # Detect the original user and home directory when running with sudo
-REAL_USER="${SUDO_USER:-$USER}"
+REAL_USER="${SUDO_USER:-$(whoami)}"
 REAL_HOME=$(getent passwd "$REAL_USER" | cut -d: -f6)
 
 # ==============================================================================
@@ -75,8 +75,13 @@ if [ "$CURRENT_DIR" != "$TARGET_DIR" ]; then
         echo "[!] Target directory $TARGET_DIR already exists. Skipping move."
     else
         echo "[+] Moving repo to: $TARGET_DIR"
-        mv "$CURRENT_DIR" "$TARGET_DIR"
-        
+        # Copy with sudo to bypass read permissions
+        sudo cp -a "$CURRENT_DIR" "$TARGET_DIR"
+        # Fix ownership on the destination immediately
+        sudo chown -R "$REAL_USER:$REAL_USER" "$TARGET_DIR"
+        # Remove the old directory
+        sudo rm -rf "$CURRENT_DIR"   
+             
         # Restore ownership to the standard user
         if [ "$EUID" -ne 0 ]; then
             sudo chown -R "$REAL_USER:$REAL_USER" "$TARGET_DIR"

@@ -1,4 +1,13 @@
 ---
+- name: Create Projects Root
+  file:
+    path: "{{ ansible_user_dir }}/Projects"
+    state: directory
+    mode: '0755'
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+  tags: [filesystem]
+  
 - name: Create Standard Project Directories
   file:
     path: "{{ ansible_user_dir }}/Projects/{{ item }}"

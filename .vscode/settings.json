@@ -3,5 +3,6 @@
         "*.yml": "ansible",
         "tasks/*.yml": "ansible"
     },
-    "ansible.validation.enabled": true
+    "ansible.validation.enabled": true,
+    "ansible.python.interpreterPath": "/home/hadev/.pyenv/versions/3.12.1/bin/python"
 }

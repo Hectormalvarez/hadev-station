@@ -15,7 +15,6 @@ common_packages:
   - tmux
   - htop
   # Modern CLI Tools
-  - fastfetch
   - bat
   - fzf
   - xclip
