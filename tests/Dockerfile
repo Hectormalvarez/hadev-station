@@ -25,5 +25,8 @@ COPY --chown=testuser:testuser . .
 # 5. Make the script executable
 RUN chmod +x setup.sh
 
-# 6. Default command: Drop into a shell
+# 6. Validation check
+RUN test -f /home/testuser/.bashrc_extras || (echo "FAILED: .bashrc_extras missing" && exit 1)
+
+# 7. Default command: Drop into a shell
 CMD ["/bin/bash"]
