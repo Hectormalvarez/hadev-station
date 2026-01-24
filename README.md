@@ -26,19 +26,37 @@ This Ansible playbook automates the setup of my personal Ubuntu development envi
 
 ## Usage
 
-### Quick Start (Bootstrap)
+### Quick Start (Bootstrap & Updates)
 
-On a fresh machine, run the setup script. This installs Ansible, runs the playbook, and relocates the repo to `~/Projects/Code`.
+This project uses a wrapper script to handle permission elevation and user context detection automatically.
+
+To install or update your configuration:
 
 ```bash
 ./setup.sh
 
 ```
 
-### Manual Run
+### Partial Updates
 
-If you already have Ansible installed and just want to apply updates:
+The setup script passes arguments through to Ansible. You can run specific parts of the configuration using tags:
 
 ```bash
-ansible-playbook -i inventory local.yml -K
+# Only update dotfiles (aliases, prompt, etc.)
+./setup.sh --tags "dotfiles"
+
+# Only update user scripts
+./setup.sh --tags "scripts"
+
+```
+
+### Manual Execution (Advanced)
+
+If you prefer to run `ansible-playbook` directly without the wrapper, you must run as root and explicitly inject your user context to ensure file permissions are correct:
+
+```bash
+sudo ansible-playbook -i inventory local.yml \
+  -e "ansible_user_id=$(whoami)" \
+  -e "ansible_user_dir=$HOME"
+
 ```

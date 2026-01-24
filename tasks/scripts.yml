@@ -4,6 +4,8 @@
     path: "{{ ansible_user_dir }}/.local/bin"
     state: directory
     mode: '0755'
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
   tags: [scripts]
 
 - name: Download User Scripts
@@ -11,5 +13,7 @@
     url: "{{ item.url }}"
     dest: "{{ ansible_user_dir }}/.local/bin/{{ item.name }}"
     mode: '0755'
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
   loop: "{{ executable_scripts }}"
   tags: [scripts]

@@ -1,74 +1,94 @@
 #!/bin/bash
-set -e # Exit immediately if a command exits with a non-zero status
+set -e
+
+# ==============================================================================
+# 1. User Context Detection
+# ==============================================================================
+# Detect the original user and home directory when running with sudo
+REAL_USER="${SUDO_USER:-$USER}"
+REAL_HOME=$(getent passwd "$REAL_USER" | cut -d: -f6)
 
 # ==============================================================================
 # Configuration
 # ==============================================================================
-# The destination parent folder (Must match what is in tasks/filesystem.yml)
-TARGET_PARENT="$HOME/Projects/Code"
+TARGET_PARENT="$REAL_HOME/Projects/Code"
 
 echo "=============================================================================="
 echo "  Hadev's Workstation Setup"
+echo "  Target User: $REAL_USER ($REAL_HOME)"
 echo "=============================================================================="
 
-# 1. Install Ansible (if missing)
-# ------------------------------------------------------------------------------
+# ==============================================================================
+# 2. Dependency Check (Ansible)
+# ==============================================================================
 if ! command -v ansible >/dev/null; then
     echo "[+] Ansible not found. Installing..."
-    sudo apt-get update -qq
-    sudo apt-get install -y -qq software-properties-common
-    sudo add-apt-repository --yes --update ppa:ansible/ansible
-    sudo apt-get install -y -qq ansible git
-else
-    echo "[+] Ansible is already installed."
+    
+    if [ "$EUID" -ne 0 ]; then
+        sudo apt-get update -qq
+        sudo apt-get install -y -qq software-properties-common
+        sudo add-apt-repository --yes --update ppa:ansible/ansible
+        sudo apt-get install -y -qq ansible git
+    else
+        apt-get update -qq
+        apt-get install -y -qq software-properties-common
+        add-apt-repository --yes --update ppa:ansible/ansible
+        apt-get install -y -qq ansible git
+    fi
 fi
 
-# 2. Run the Playbook
-# ------------------------------------------------------------------------------
+# ==============================================================================
+# 3. Playbook Execution
+# ==============================================================================
 echo "[+] Running Ansible Playbook..."
-# This runs the tasks that create ~/Projects/Code
-ansible-playbook -i inventory local.yml -K
 
-# 3. Relocate Repository
-# ------------------------------------------------------------------------------
+# Construct command to run as root while injecting original user facts
+CMD="ansible-playbook -i inventory local.yml -e ansible_user_id=$REAL_USER -e ansible_user_dir=$REAL_HOME"
+
+# Elevate privileges if not already root
+if [ "$EUID" -ne 0 ]; then
+    CMD="sudo $CMD"
+fi
+
+# Execute playbook, passing through any additional arguments (e.g., --tags)
+$CMD "$@"
+
+# ==============================================================================
+# 4. Repository Relocation
+# ==============================================================================
 CURRENT_DIR=$(pwd)
 REPO_NAME=$(basename "$CURRENT_DIR")
 TARGET_DIR="$TARGET_PARENT/$REPO_NAME"
 
-# Check if we are already in the correct location
-if [ "$CURRENT_DIR" == "$TARGET_DIR" ]; then
-    echo "[+] Repository is already in the correct location: $TARGET_DIR"
-    exit 0
-fi
+# Check if repository is already in the target location
+if [ "$CURRENT_DIR" != "$TARGET_DIR" ]; then
+    echo "=============================================================================="
+    echo "  Relocating Repository"
+    echo "=============================================================================="
 
-echo "=============================================================================="
-echo "  Relocating Repository"
-echo "=============================================================================="
+    if [ ! -d "$TARGET_PARENT" ]; then
+        echo "[!] Error: Parent directory $TARGET_PARENT does not exist."
+        exit 1
+    fi
 
-# Verify the parent directory exists (Ansible should have created it)
-if [ ! -d "$TARGET_PARENT" ]; then
-    echo "[!] Error: $TARGET_PARENT does not exist."
-    echo "    Did the Ansible playbook fail to create the filesystem structure?"
-    exit 1
-fi
-
-# Check if the target folder already exists to prevent overwriting
-if [ -d "$TARGET_DIR" ]; then
-    echo "[!] WARNING: Target directory $TARGET_DIR already exists."
-    echo "    Skipping move to prevent overwriting data."
+    if [ -d "$TARGET_DIR" ]; then
+        echo "[!] Target directory $TARGET_DIR already exists. Skipping move."
+    else
+        echo "[+] Moving repo to: $TARGET_DIR"
+        mv "$CURRENT_DIR" "$TARGET_DIR"
+        
+        # Restore ownership to the standard user
+        if [ "$EUID" -ne 0 ]; then
+            sudo chown -R "$REAL_USER:$REAL_USER" "$TARGET_DIR"
+        else
+            chown -R "$REAL_USER:$REAL_USER" "$TARGET_DIR"
+        fi
+        
+        echo ""
+        echo "✅ Setup Complete!"
+        echo "   Please change directory: cd $TARGET_DIR"
+    fi
 else
-    echo "[+] Moving repo from: $CURRENT_DIR"
-    echo "              to: $TARGET_DIR"
-    
-    # Move the directory
-    mv "$CURRENT_DIR" "$TARGET_DIR"
-    
     echo ""
-    echo "✅ Setup Complete!"
-    echo "------------------------------------------------------------------------------"
-    echo "NOTE: Your terminal is still inside the old path."
-    echo "      Please cd into the new location to continue working:"
-    echo ""
-    echo "      cd $TARGET_DIR"
-    echo "------------------------------------------------------------------------------"
+    echo "✅ Execution Complete!"
 fi

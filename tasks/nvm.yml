@@ -5,4 +5,14 @@
     dest: "{{ ansible_user_dir }}/.nvm"
     version: v0.40.1
     update: yes
+    recursive: no
+  tags: [nvm]
+
+- name: Fix NVM Permissions
+  file:
+    path: "{{ ansible_user_dir }}/.nvm"
+    state: directory
+    recurse: yes
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
   tags: [nvm]

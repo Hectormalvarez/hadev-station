@@ -12,3 +12,12 @@
     dest: "{{ ansible_user_dir }}/.pyenv/plugins/pyenv-virtualenv"
     update: yes
   tags: [python]
+
+- name: Ensure User Ownership of Pyenv
+  file:
+    path: "{{ ansible_user_dir }}/.pyenv"
+    state: directory
+    recurse: yes
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+  tags: [python]
