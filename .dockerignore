@@ -1,0 +1,5 @@
+.git
+.ansible
+.retry
+*.log
+tests/
