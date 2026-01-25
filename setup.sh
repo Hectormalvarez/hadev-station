@@ -46,7 +46,7 @@ run_ansible() {
     echo "[+] Running Ansible Playbook..."
     
     # Construct command to run as root while injecting original user facts
-    CMD="ansible-playbook -i inventory local.yml -e ansible_user_id=$REAL_USER -e ansible_user_dir=$REAL_HOME"
+    CMD="ansible-playbook -v -i inventory local.yml -e ansible_user_id=$REAL_USER -e ansible_user_dir=$REAL_HOME"
     
     # Elevate privileges if not already root
     if [ "$EUID" -ne 0 ]; then
