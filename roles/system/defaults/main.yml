@@ -18,6 +18,7 @@ common_packages:
   - bat
   - fzf
   - xclip
+  - copyq
 # Databases
   - sqlite3
 # Linters
