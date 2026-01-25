@@ -40,18 +40,25 @@ fi
 # ==============================================================================
 # 3. Playbook Execution
 # ==============================================================================
-echo "[+] Running Ansible Playbook..."
 
-# Construct command to run as root while injecting original user facts
-CMD="ansible-playbook -i inventory local.yml -e ansible_user_id=$REAL_USER -e ansible_user_dir=$REAL_HOME"
+# Function to run ansible with proper user context and privilege escalation
+run_ansible() {
+    echo "[+] Running Ansible Playbook..."
+    
+    # Construct command to run as root while injecting original user facts
+    CMD="ansible-playbook -i inventory local.yml -e ansible_user_id=$REAL_USER -e ansible_user_dir=$REAL_HOME"
+    
+    # Elevate privileges if not already root
+    if [ "$EUID" -ne 0 ]; then
+        CMD="sudo $CMD"
+    fi
+    
+    # Execute playbook, passing through any additional arguments (e.g., --tags)
+    $CMD "$@"
+}
 
-# Elevate privileges if not already root
-if [ "$EUID" -ne 0 ]; then
-    CMD="sudo $CMD"
-fi
-
-# Execute playbook, passing through any additional arguments (e.g., --tags)
-$CMD "$@"
+# Execute the ansible playbook
+run_ansible "$@"
 
 # ==============================================================================
 # 4. Repository Relocation
