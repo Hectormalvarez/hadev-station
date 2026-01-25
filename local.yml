@@ -18,8 +18,6 @@
     - role: languages
       tags: [languages]
 
-  tasks:
-
-    - import_tasks: tasks/docker.yml
+    - role: docker
       tags: [docker]
 
