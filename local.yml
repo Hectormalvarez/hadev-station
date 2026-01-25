@@ -6,6 +6,9 @@
     - vars/main.yml
 
   roles:
+    - role: core
+      tags: [core]
+
     - role: system
       tags: [system]
 
@@ -13,12 +16,6 @@
       tags: [terminal, dotfiles, fonts, starship]
 
   tasks:
-
-    - import_tasks: tasks/security.yml
-      tags: [security]
-
-    - import_tasks: tasks/filesystem.yml
-      tags: [filesystem]
 
     - import_tasks: tasks/docker.yml
       tags: [docker]

@@ -1,0 +1,63 @@
+---
+# ==============================================================================
+# Core Role: Main Tasks
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Security Tasks
+# ------------------------------------------------------------------------------
+- name: Ensure .ssh directory exists
+  file:
+    path: "{{ ansible_user_dir }}/.ssh"
+    state: directory
+    mode: '0700'
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+  tags: [ssh]
+
+- name: Generate SSH Key (Ed25519)
+  openssh_keypair:
+    path: "{{ ansible_user_dir }}/.ssh/id_ed25519"
+    type: ed25519
+    comment: "{{ ansible_user_id }}@{{ ansible_hostname }}"
+    state: present
+  register: ssh_key_gen
+  tags: [ssh]
+
+- name: Display Public Key
+  debug:
+    msg: "{{ ssh_key_gen.public_key }}"
+  tags: [ssh]
+
+# ------------------------------------------------------------------------------
+# Filesystem Tasks
+# ------------------------------------------------------------------------------
+- name: Create Projects Root
+  file:
+    path: "{{ ansible_user_dir }}/Projects"
+    state: directory
+    mode: '0755'
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+  tags: [filesystem]
+  
+- name: Create Standard Project Directories
+  file:
+    path: "{{ ansible_user_dir }}/Projects/{{ item }}"
+    state: directory
+    mode: '0755'
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+  loop: "{{ project_folders }}"
+  tags: [filesystem]
+
+# ------------------------------------------------------------------------------
+# Git Configuration Tasks
+# ------------------------------------------------------------------------------
+- name: Apply Git Configuration
+  community.general.git_config:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    scope: global
+  loop: "{{ git_config }}"
+  tags: [git]
