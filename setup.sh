@@ -72,6 +72,15 @@ case "$1" in
     -h|--help)
         usage
         ;;
+    dotfiles)
+        run_ansible --tags "dotfiles,terminal,starship" "${@:2}"
+        ;;
+    core)
+        run_ansible --tags "core,system" "${@:2}"
+        ;;
+    python)
+        run_ansible --tags "languages" "${@:2}"
+        ;;
     *)
         run_ansible "$@"
         ;;
