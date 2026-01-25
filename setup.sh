@@ -41,6 +41,11 @@ fi
 # 3. Playbook Execution
 # ==============================================================================
 
+# Function to display usage information
+usage() {
+    echo "Usage: ./setup.sh [command] [options]"
+}
+
 # Function to run ansible with proper user context and privilege escalation
 run_ansible() {
     echo "[+] Running Ansible Playbook..."
@@ -57,8 +62,20 @@ run_ansible() {
     $CMD "$@"
 }
 
-# Execute the ansible playbook
-run_ansible "$@"
+# Argument parsing logic
+if [ $# -eq 0 ]; then
+    run_ansible
+    exit
+fi
+
+case "$1" in
+    -h|--help)
+        usage
+        ;;
+    *)
+        run_ansible "$@"
+        ;;
+esac
 
 # ==============================================================================
 # 4. Repository Relocation
