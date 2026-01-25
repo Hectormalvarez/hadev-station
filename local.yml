@@ -15,14 +15,11 @@
     - role: terminal
       tags: [terminal, dotfiles, fonts, starship]
 
+    - role: languages
+      tags: [languages]
+
   tasks:
 
     - import_tasks: tasks/docker.yml
       tags: [docker]
-
-    - import_tasks: tasks/pyenv.yml
-      tags: [pyenv]
-
-    - import_tasks: tasks/nvm.yml
-      tags: [nvm]
 
