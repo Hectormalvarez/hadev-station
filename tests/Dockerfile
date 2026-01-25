@@ -25,7 +25,10 @@ COPY --chown=testuser:testuser . .
 # 5. Make the script executable
 RUN chmod +x setup.sh
 
-# 6. Validation check
+# 6. Run the Ansible playbook to apply the roles
+RUN sudo ansible-playbook -i inventory local.yml -e ansible_user_id=testuser -e ansible_user_dir=/home/testuser
+
+# 7. Validation check
 RUN test -f /home/testuser/.bashrc_extras || (echo "FAILED: .bashrc_extras missing" && exit 1)
 
 # 7. Default command: Drop into a shell

@@ -5,6 +5,10 @@
   vars_files:
     - vars/main.yml
 
+  roles:
+    - role: terminal
+      tags: [terminal, dotfiles, fonts, starship]
+
   tasks:
     - import_tasks: tasks/system.yml
       tags: [system]
@@ -18,9 +22,6 @@
     - import_tasks: tasks/docker.yml
       tags: [docker]
 
-    - import_tasks: tasks/terminal.yml
-      tags: [terminal]
-
     - import_tasks: tasks/pyenv.yml
       tags: [pyenv]
 
@@ -29,6 +30,3 @@
 
     - import_tasks: tasks/scripts.yml
       tags: [scripts]
-
-    - import_tasks: tasks/dotfiles.yml
-      tags: [dotfiles]
