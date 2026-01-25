@@ -26,5 +26,3 @@
     - import_tasks: tasks/nvm.yml
       tags: [nvm]
 
-    - import_tasks: tasks/scripts.yml
-      tags: [scripts]
