@@ -6,12 +6,13 @@
     - vars/main.yml
 
   roles:
+    - role: system
+      tags: [system]
+
     - role: terminal
       tags: [terminal, dotfiles, fonts, starship]
 
   tasks:
-    - import_tasks: tasks/system.yml
-      tags: [system]
 
     - import_tasks: tasks/security.yml
       tags: [security]
