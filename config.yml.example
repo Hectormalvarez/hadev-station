@@ -1,0 +1,21 @@
+---
+# ==============================================================================
+# Workstation Configuration
+# Copy this file to config.yml and customize it to your needs.
+# ==============================================================================
+
+# Git Configuration
+user_git_name: "Your Name"
+user_git_email: "your.email@example.com"
+
+# Custom Scripts to Download to ~/.local/bin
+user_custom_scripts:
+  # - name: "script_name"
+  #   url: "https://raw.githubusercontent.com/..."
+
+# Additional User Packages (Beyond base system requirements)
+user_extra_packages:
+  - bat
+  - fzf
+  - xclip
+  - copyq

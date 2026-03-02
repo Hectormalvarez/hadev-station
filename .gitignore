@@ -2,3 +2,4 @@
 *.log
 .ansible/
 .ansible-lint-cache/
+config.yml
