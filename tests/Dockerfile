@@ -25,6 +25,9 @@ COPY --chown=testuser:testuser . .
 # 5. Make the script executable
 RUN chmod +x setup.sh
 
+# 5.5 Create dummy configuration for automated testing
+RUN cp config.yml.example config.yml
+
 # 6. Run the Ansible playbook to apply the roles
 RUN sudo ansible-playbook -i inventory local.yml -e ansible_user_id=testuser -e ansible_user_dir=/home/testuser
 
