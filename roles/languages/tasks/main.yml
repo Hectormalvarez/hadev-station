@@ -14,12 +14,9 @@
   tags: [python]
 
 - name: Ensure User Ownership of Pyenv
-  file:
-    path: "{{ ansible_user_dir }}/.pyenv"
-    state: directory
-    recurse: yes
-    owner: "{{ ansible_user_id }}"
-    group: "{{ ansible_user_id }}"
+  become: true
+  command: "chown -hR {{ ansible_user_id }}:{{ ansible_user_id }} {{ ansible_user_dir }}/.pyenv"
+  changed_when: false
   tags: [python]
 
 - name: Install NVM
@@ -32,10 +29,7 @@
   tags: [nvm]
 
 - name: Fix NVM Permissions
-  file:
-    path: "{{ ansible_user_dir }}/.nvm"
-    state: directory
-    recurse: yes
-    owner: "{{ ansible_user_id }}"
-    group: "{{ ansible_user_id }}"
+  become: true
+  command: "chown -hR {{ ansible_user_id }}:{{ ansible_user_id }} {{ ansible_user_dir }}/.nvm"
+  changed_when: false
   tags: [nvm]
