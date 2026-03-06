@@ -24,4 +24,4 @@ git_config:
 # User Scripts (~/.local/bin)
 # ------------------------------------------------------------------------------
 # Default to empty list if not defined in config.yml
-executable_scripts: "{{ user_custom_scripts | default([]) }}"
+executable_scripts: "{{ user_custom_scripts | default([], true) }}"
