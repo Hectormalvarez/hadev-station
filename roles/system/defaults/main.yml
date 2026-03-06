@@ -6,7 +6,7 @@
 # ------------------------------------------------------------------------------
 # System Packages
 # ------------------------------------------------------------------------------
-common_packages:
+system_packages_core:
   # Essentials
   - git
   - curl
@@ -14,14 +14,9 @@ common_packages:
   - vim
   - tmux
   - htop
-  # Modern CLI Tools
-  - bat
-  - fzf
-  - xclip
-  - copyq
-# Databases
+  # Databases
   - sqlite3
-# Linters
+  # Linters
   - ansible-lint
   - yamllint
 

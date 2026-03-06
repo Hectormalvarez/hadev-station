@@ -10,7 +10,7 @@
 - name: Install Common Utilities
   become: true
   package:
-    name: "{{ common_packages }}"
+    name: "{{ system_packages_core + (user_extra_packages | default([])) }}"
     state: present
   tags: [system, common]
 
