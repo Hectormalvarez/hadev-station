@@ -38,6 +38,18 @@ if ! command -v ansible >/dev/null; then
 fi
 
 # ==============================================================================
+# Configuration Initialization
+# ==============================================================================
+if [ ! -f "config.yml" ]; then
+    echo "[+] Configuration file not found. Creating from template..."
+    cp config.yml.example config.yml
+    echo "[!] A new config.yml file has been created."
+    echo "[!] Please review and update config.yml with your personal information."
+    echo "[!] Exiting setup. Run ./setup.sh again after configuring."
+    exit 0
+fi
+
+# ==============================================================================
 # 3. Playbook Execution
 # ==============================================================================
 
