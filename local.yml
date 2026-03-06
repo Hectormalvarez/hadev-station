@@ -2,6 +2,9 @@
 - name: Standardize Laptop Setup
   hosts: my_laptop
 
+  vars_files:
+    - config.yml
+
   roles:
     - role: core
       tags: [core]

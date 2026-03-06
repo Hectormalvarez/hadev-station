@@ -16,14 +16,12 @@ project_folders:
 # Git Configuration
 # ------------------------------------------------------------------------------
 git_config:
-  - { key: "user.name", value: "Hector Alvarez" }
-  - { key: "user.email", value: "alvarez.hectorm@outlook.com" }
+  - { key: "user.name", value: "{{ user_git_name }}" }
+  - { key: "user.email", value: "{{ user_git_email }}" }
   - { key: "init.defaultBranch", value: "main" }
 
 # ------------------------------------------------------------------------------
 # User Scripts (~/.local/bin)
 # ------------------------------------------------------------------------------
-executable_scripts:
-  # { name: "filename", url: "https://raw.github..." }
-  - name: "collect_context"
-    url: "https://raw.githubusercontent.com/Hectormalvarez/collect_context/main/collect_context.sh"
+# Default to empty list if not defined in config.yml
+executable_scripts: "{{ user_custom_scripts | default([]) }}"
