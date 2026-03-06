@@ -19,7 +19,7 @@
   openssh_keypair:
     path: "{{ ansible_user_dir }}/.ssh/id_ed25519"
     type: ed25519
-    comment: "{{ ansible_user_id }}@{{ ansible_hostname }}"
+    comment: "{{ ansible_user_id }}@{{ ansible_facts['hostname'] }}"
     state: present
   register: ssh_key_gen
   tags: [ssh]
@@ -58,7 +58,8 @@
   community.general.git_config:
     name: "{{ item.key }}"
     value: "{{ item.value }}"
-    scope: global
+    scope: file
+    file: "{{ ansible_user_dir }}/.gitconfig"
   loop: "{{ git_config }}"
   tags: [git]
 
