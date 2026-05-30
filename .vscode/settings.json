@@ -1,8 +1,8 @@
 {
     "files.associations": {
         "*.yml": "ansible",
-        "tasks/*.yml": "ansible"
+        "**/*.yml": "ansible"
     },
     "ansible.validation.enabled": true,
-    "ansible.python.interpreterPath": "/home/hadev/.pyenv/versions/3.12.1/bin/python"
+    "ansible.python.interpreterPath": "/home/hadev/.pyenv/versions/3.12.1/bin/python",
 }
