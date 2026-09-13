@@ -7,30 +7,32 @@ This Ansible playbook automates the setup of my personal Ubuntu development envi
 The project is organized into roles that handle specific aspects of the workstation setup:
 
 ### Core Role
-- **Updates Cache:** Refreshes apt repositories.
-- **Core Utilities:** `git`, `curl`, `wget`, `htop`, `tmux`, `vim`.
-- **Modern CLI:** `fastfetch` (system info), `bat` (cat replacement), `fzf` (fuzzy finder).
-- **Build Tools:** Installs dependencies required to build Python and other packages.
-
-### System Role
 - **Workspace:** Creates standard directory structure: `~/Projects/{Code,Study,Lab,Scratch}`.
 - **Security:** Generates an **Ed25519** SSH key pair.
 - **Git:** Configures global user identity and defaults new branches to `main`.
-- **Shell:** Wires up `.bashrc` with aliases, tool paths, and environment variables.
+- **Custom Scripts:** Downloads user scripts to `~/.local/bin` (defined in `config.yml`).
+
+### System Role
+- **Core Utilities:** `git`, `curl`, `wget`, `vim`, `tmux`, `htop`, `sqlite3`, plus linters (`ansible-lint`, `yamllint`).
+- **Extra Packages:** `bat`, `fzf`, `xclip`, `copyq`, `gh` (configurable in `config.yml`).
+- **Build Tools:** Installs the dependencies required to compile Python with pyenv.
 
 ### Languages Role
 - **Python:** Installs `pyenv` and `pyenv-virtualenv` for managing Python versions.
 - **Node.js:** Installs `nvm` (Node Version Manager) for managing Node versions.
 
 ### Terminal Role
-- **Shell Enhancements:** Additional terminal configuration and improvements.
+- **Shell:** Templates `~/.bashrc_extras` (pyenv/nvm init, `bat`/`ll`/`toclip` aliases, fzf key bindings, Starship prompt) and wires it into `.bashrc`.
+- **Fonts:** Installs the Meslo Nerd Font into `~/.local/share/fonts`.
+- **Starship:** Installs the Starship shell prompt.
 - **tmux:** Deploys a managed `~/.tmux.conf` with sensible defaults (mouse support, vi copy mode, 256-color/truecolor, custom status bar). Structured so the TPM plugin manager can be enabled later.
 
 ### Docker Role
 - **Container Tools:** Docker and related containerization tools.
 
-### Scripts Role
-- **Custom Scripts:** Downloads custom user scripts to `~/.local/bin`.
+### Virtualization Role
+- **HashiCorp:** Adds the official HashiCorp apt repository and installs `packer` and `vagrant`.
+- **Vagrant:** Installs the `vagrant-libvirt` plugin (with its build dependencies) for libvirt providers.
 
 ## Usage
 
