@@ -5,18 +5,16 @@
     update_cache: yes
     cache_valid_time: 3600
   when: ansible_facts['os_family'] == "Debian"
-  tags: [apt_update]
 
 - name: Install Common Utilities
   become: true
   package:
     name: "{{ system_packages_core + (user_extra_packages | default([])) }}"
     state: present
-  tags: [system, common]
 
 - name: Install Python Build Dependencies
   become: true
   package:
     name: "{{ python_build_deps }}"
     state: present
-  tags: [system, python_deps]
+  tags: [python]

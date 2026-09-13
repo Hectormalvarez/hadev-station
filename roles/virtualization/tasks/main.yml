@@ -8,7 +8,6 @@
     name: "{{ kvm_packages }}"
     state: present
     update_cache: yes
-  tags: [virtualization, kvm]
 
 # ------------------------------------------------------------------------------
 # HashiCorp Tooling Setup (Packer & Vagrant)
@@ -19,7 +18,6 @@
     path: /etc/apt/keyrings
     state: directory
     mode: '0755'
-  tags: [hashicorp]
 
 - name: Download HashiCorp Official GPG Key
   become: true
@@ -29,14 +27,12 @@
     mode: '0644'
     # Always re-download so rotated signing keys don't go stale (NO_PUBKEY failures)
     force: true
-  tags: [hashicorp]
 
 - name: Add HashiCorp Repository
   become: true
   apt_repository:
     repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/hashicorp.asc] https://apt.releases.hashicorp.com {{ ansible_facts['distribution_release'] }} main"
     state: present
-  tags: [hashicorp]
 
 - name: Install Packer and Vagrant
   become: true
@@ -46,14 +42,12 @@
       - vagrant
     state: present
     update_cache: yes
-  tags: [hashicorp, tools]
 
 - name: Check if Vagrant-Libvirt Plugin is Installed
   command: vagrant plugin list
   register: vagrant_plugins
   changed_when: false
   become: false
-  tags: [hashicorp, vagrant]
 
 - name: Install Vagrant-Libvirt Build Dependencies
   become: true
@@ -61,10 +55,8 @@
     name: "{{ vagrant_libvirt_deps }}"
     state: present
   when: "'vagrant-libvirt' not in vagrant_plugins.stdout"
-  tags: [hashicorp, vagrant]
 
 - name: Install Vagrant-Libvirt Plugin Natively
   command: vagrant plugin install vagrant-libvirt
   when: "'vagrant-libvirt' not in vagrant_plugins.stdout"
   become: false
-  tags: [hashicorp, vagrant]

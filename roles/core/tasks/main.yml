@@ -13,7 +13,6 @@
     mode: '0700'
     owner: "{{ ansible_user_id }}"
     group: "{{ ansible_user_id }}"
-  tags: [ssh]
 
 - name: Generate SSH Key (Ed25519)
   openssh_keypair:
@@ -22,12 +21,10 @@
     comment: "{{ ansible_user_id }}@{{ ansible_facts['hostname'] }}"
     state: present
   register: ssh_key_gen
-  tags: [ssh]
 
 - name: Display Public Key
   debug:
     msg: "{{ ssh_key_gen.public_key }}"
-  tags: [ssh]
 
 # ------------------------------------------------------------------------------
 # Filesystem Tasks
@@ -39,8 +36,6 @@
     mode: '0755'
     owner: "{{ ansible_user_id }}"
     group: "{{ ansible_user_id }}"
-  tags: [filesystem]
-  
 - name: Create Standard Project Directories
   file:
     path: "{{ ansible_user_dir }}/Projects/{{ item }}"
@@ -49,7 +44,6 @@
     owner: "{{ ansible_user_id }}"
     group: "{{ ansible_user_id }}"
   loop: "{{ project_folders }}"
-  tags: [filesystem]
 
 # ------------------------------------------------------------------------------
 # Git Configuration Tasks
@@ -61,7 +55,6 @@
     scope: file
     file: "{{ ansible_user_dir }}/.gitconfig"
   loop: "{{ git_config }}"
-  tags: [git]
 
 # ------------------------------------------------------------------------------
 # User Scripts Tasks
@@ -73,7 +66,6 @@
     mode: '0755'
     owner: "{{ ansible_user_id }}"
     group: "{{ ansible_user_id }}"
-  tags: [scripts]
 
 - name: Download User Scripts
   get_url:
@@ -83,4 +75,3 @@
     owner: "{{ ansible_user_id }}"
     group: "{{ ansible_user_id }}"
   loop: "{{ executable_scripts }}"
-  tags: [scripts]

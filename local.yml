@@ -36,7 +36,7 @@
       tags: [system]
 
     - role: terminal
-      tags: [terminal, dotfiles, fonts, starship]
+      tags: [terminal]
 
     - role: languages
       tags: [languages]
@@ -45,4 +45,4 @@
       tags: [docker]
 
     - role: virtualization
-      tags: [virtualization, kvm, hashicorp]
+      tags: [virtualization]

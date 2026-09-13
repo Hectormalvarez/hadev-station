@@ -55,9 +55,12 @@ All arguments are passed through to ansible-playbook untouched.
 
 Common tags (limit the run to part of the setup):
   core           workspace dirs, SSH key, git config, custom scripts
-  system         base packages, linters, build tools
-  dotfiles       bashrc_extras, fonts, starship, tmux config
+  system         base packages, linters
+  terminal       everything terminal (fonts, starship, tmux, bashrc)
+  dotfiles       bashrc_extras, .bashrc wiring, tmux config
   languages      pyenv (Python) and nvm (Node.js)
+  python         pyenv and its build dependencies
+  nvm            nvm only
   docker         docker and container tools
   virtualization KVM/QEMU, packer, vagrant (+ libvirt plugin)
 

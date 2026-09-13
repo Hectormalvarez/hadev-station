@@ -9,7 +9,6 @@
       - python3-pip
     state: present
     update_cache: yes
-  tags: [docker]
 
 - name: Ensure Docker service is running
   become: true
@@ -17,7 +16,6 @@
     name: docker
     state: started
     enabled: yes
-  tags: [docker]
 
 - name: Add user to docker group
   become: true
@@ -25,9 +23,7 @@
     name: "{{ ansible_user_id }}"
     groups: docker
     append: yes
-  tags: [docker]
 
 - name: Print group membership reminder
   debug:
     msg: "NOTE: You must log out and log back in for docker group permissions to take effect."
-  tags: [docker]
