@@ -42,6 +42,14 @@
   become: false
   tags: [hashicorp, vagrant]
 
+- name: Install Vagrant-Libvirt Build Dependencies
+  become: true
+  apt:
+    name: "{{ vagrant_libvirt_deps }}"
+    state: present
+  when: "'vagrant-libvirt' not in vagrant_plugins.stdout"
+  tags: [hashicorp, vagrant]
+
 - name: Install Vagrant-Libvirt Plugin Natively
   command: vagrant plugin install vagrant-libvirt
   when: "'vagrant-libvirt' not in vagrant_plugins.stdout"
