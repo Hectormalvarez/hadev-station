@@ -1,5 +1,16 @@
 ---
 # ------------------------------------------------------------------------------
+# KVM / QEMU Stack
+# ------------------------------------------------------------------------------
+- name: Install KVM/QEMU Packages
+  become: true
+  apt:
+    name: "{{ kvm_packages }}"
+    state: present
+    update_cache: yes
+  tags: [virtualization, kvm]
+
+# ------------------------------------------------------------------------------
 # HashiCorp Tooling Setup (Packer & Vagrant)
 # ------------------------------------------------------------------------------
 - name: Ensure APT Keyrings Directory Exists
