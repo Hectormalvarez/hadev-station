@@ -27,6 +27,8 @@
     url: https://apt.releases.hashicorp.com/gpg
     dest: /etc/apt/keyrings/hashicorp.asc
     mode: '0644'
+    # Always re-download so rotated signing keys don't go stale (NO_PUBKEY failures)
+    force: true
   tags: [hashicorp]
 
 - name: Add HashiCorp Repository
