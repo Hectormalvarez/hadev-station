@@ -52,12 +52,14 @@ To install or update your configuration:
 The setup script passes arguments through to Ansible. You can run specific parts of the configuration using tags:
 
 ```bash
-# Only update dotfiles (aliases, prompt, etc.)
+# Only update dotfiles (aliases, prompt, tmux config, fonts)
 ./setup.sh --tags "dotfiles"
 
-# Only update user scripts
-./setup.sh --tags "scripts"
+# Only install language tooling (pyenv, nvm)
+./setup.sh --tags "languages"
 
+# See every available tag
+./setup.sh --list-tags
 ```
 
 ### Manual Execution (Advanced)

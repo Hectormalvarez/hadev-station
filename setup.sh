@@ -1,144 +1,142 @@
 #!/bin/bash
-set -e
+set -euo pipefail
+
+# ==============================================================================
+#  Bootstrap and entry point for Hadev's Workstation Setup.
+#
+#  Responsibilities:
+#    1. Detect the invoking user (even under sudo) so the playbook can
+#       target their home directory.
+#    2. Install Ansible if missing.
+#    3. Bootstrap config.yml from the example template.
+#    4. Execute the playbook, forwarding any extra arguments to Ansible.
+#
+#  Run from anywhere:  ./setup.sh [extra ansible-playbook arguments]
+#  Common usage:       ./setup.sh --tags "dotfiles"
+# ==============================================================================
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
 
 # ==============================================================================
 # 1. User Context Detection
 # ==============================================================================
-# Detect the original user and home directory when running with sudo
+# When the script runs under sudo, SUDO_USER holds the original user. The
+# playbook needs that identity so files land in the right home directory.
 REAL_USER="${SUDO_USER:-$(whoami)}"
-REAL_HOME=$(getent passwd "$REAL_USER" | cut -d: -f6)
+REAL_HOME="$(getent passwd "$REAL_USER" | cut -d: -f6)"
 
 # ==============================================================================
-# Configuration
+# Helpers
 # ==============================================================================
-TARGET_PARENT="$REAL_HOME/Projects/Code"
+
+# Run a command as root, elevating with sudo only when necessary.
+as_root() {
+    if [[ $EUID -ne 0 ]]; then
+        sudo "$@"
+    else
+        "$@"
+    fi
+}
+
+usage() {
+    cat <<EOF
+Usage: ./setup.sh [ansible-playbook options]
+
+Bootstraps and runs the local workstation playbook (local.yml).
+
+The script automatically:
+  - installs Ansible if it is missing
+  - creates config.yml from config.yml.example on first run
+  - runs the playbook with your user context injected
+    (-e ansible_user_id / -e ansible_user_dir)
+
+All arguments are passed through to ansible-playbook untouched.
+
+Common tags (limit the run to part of the setup):
+  core           workspace dirs, SSH key, git config, custom scripts
+  system         base packages, linters, build tools
+  dotfiles       bashrc_extras, fonts, starship, tmux config
+  languages      pyenv (Python) and nvm (Node.js)
+  docker         docker and container tools
+  virtualization KVM/QEMU, packer, vagrant (+ libvirt plugin)
+
+Examples:
+  ./setup.sh                      # full setup
+  ./setup.sh --tags "dotfiles"    # only update dotfiles
+  ./setup.sh --tags "languages"   # only install language tooling
+  ./setup.sh --list-tags          # show every available tag
+  ./setup.sh --syntax-check       # validate the playbook without running it
+EOF
+}
+
+install_ansible() {
+    echo "[+] Ansible not found. Installing..."
+    as_root apt-get update -qq
+    as_root apt-get install -y -qq software-properties-common
+    as_root add-apt-repository --yes --update ppa:ansible/ansible
+    as_root apt-get install -y -qq ansible git
+}
+
+# Copy config.yml.example to config.yml on first run. The playbook requires
+# the file to exist, and its contents are personal, so stop after creating it.
+ensure_config() {
+    if [[ ! -f config.yml ]]; then
+        echo "[+] Configuration file not found. Creating from template..."
+        cp config.yml.example config.yml
+        echo "[!] A new config.yml file has been created."
+        echo "[!] Please review and update config.yml with your personal information."
+        echo "[!] Exiting setup. Run ./setup.sh again after configuring."
+        exit 0
+    fi
+}
+
+# True when the given arguments only ask Ansible to parse/report (no tasks
+# run), so privilege elevation is unnecessary and would only prompt for sudo.
+is_parse_only() {
+    local arg
+    for arg in "$@"; do
+        case "$arg" in
+            --syntax-check|--list-tags|--list-hosts) return 0 ;;
+        esac
+    done
+    return 1
+}
+
+# Execute the playbook as root while injecting the original user context,
+# forwarding any additional arguments (e.g. --tags, --syntax-check).
+run_playbook() {
+    echo "[+] Running Ansible Playbook..."
+    if is_parse_only "$@"; then
+        ansible-playbook -i inventory local.yml \
+            -e "ansible_user_id=$REAL_USER" \
+            -e "ansible_user_dir=$REAL_HOME" \
+            "$@"
+        return
+    fi
+    as_root ansible-playbook -i inventory local.yml \
+        -e "ansible_user_id=$REAL_USER" \
+        -e "ansible_user_dir=$REAL_HOME" \
+        "$@"
+}
+
+# ==============================================================================
+# Main
+# ==============================================================================
+if [[ $# -ge 1 && ( $1 == "-h" || $1 == "--help" ) ]]; then
+    usage
+    exit 0
+fi
+
+command -v ansible >/dev/null || install_ansible
 
 echo "=============================================================================="
 echo "  Hadev's Workstation Setup"
 echo "  Target User: $REAL_USER ($REAL_HOME)"
 echo "=============================================================================="
 
-# ==============================================================================
-# 2. Dependency Check (Ansible)
-# ==============================================================================
-if ! command -v ansible >/dev/null; then
-    echo "[+] Ansible not found. Installing..."
-    
-    if [ "$EUID" -ne 0 ]; then
-        sudo apt-get update -qq
-        sudo apt-get install -y -qq software-properties-common
-        sudo add-apt-repository --yes --update ppa:ansible/ansible
-        sudo apt-get install -y -qq ansible git
-    else
-        apt-get update -qq
-        apt-get install -y -qq software-properties-common
-        add-apt-repository --yes --update ppa:ansible/ansible
-        apt-get install -y -qq ansible git
-    fi
-fi
+ensure_config
+run_playbook "$@"
 
-# ==============================================================================
-# Configuration Initialization
-# ==============================================================================
-if [ ! -f "config.yml" ]; then
-    echo "[+] Configuration file not found. Creating from template..."
-    cp config.yml.example config.yml
-    echo "[!] A new config.yml file has been created."
-    echo "[!] Please review and update config.yml with your personal information."
-    echo "[!] Exiting setup. Run ./setup.sh again after configuring."
-    exit 0
-fi
-
-# ==============================================================================
-# 3. Playbook Execution
-# ==============================================================================
-
-# Function to display usage information
-usage() {
-    echo "Usage: ./setup.sh [command] [options]"
-}
-
-# Function to run ansible with proper user context and privilege escalation
-run_ansible() {
-    echo "[+] Running Ansible Playbook..."
-    
-    # Construct command to run as root while injecting original user facts
-    CMD="ansible-playbook -i inventory local.yml -e ansible_user_id=$REAL_USER -e ansible_user_dir=$REAL_HOME"
-    
-    # Elevate privileges if not already root
-    if [ "$EUID" -ne 0 ]; then
-        CMD="sudo $CMD"
-    fi
-    
-    # Execute playbook, passing through any additional arguments (e.g., --tags)
-    $CMD "$@"
-}
-
-# Argument parsing logic
-if [ $# -eq 0 ]; then
-    run_ansible
-    exit
-fi
-
-case "$1" in
-    -h|--help)
-        usage
-        ;;
-    dotfiles)
-        run_ansible --tags "dotfiles,terminal,starship" "${@:2}"
-        ;;
-    core)
-        run_ansible --tags "core,system" "${@:2}"
-        ;;
-    python)
-        run_ansible --tags "languages" "${@:2}"
-        ;;
-    *)
-        run_ansible "$@"
-        ;;
-esac
-
-# ==============================================================================
-# 4. Repository Relocation
-# ==============================================================================
-CURRENT_DIR=$(pwd)
-REPO_NAME=$(basename "$CURRENT_DIR")
-TARGET_DIR="$TARGET_PARENT/$REPO_NAME"
-
-# Check if repository is already in the target location
-if [ "$CURRENT_DIR" != "$TARGET_DIR" ]; then
-    echo "=============================================================================="
-    echo "  Relocating Repository"
-    echo "=============================================================================="
-
-    if [ ! -d "$TARGET_PARENT" ]; then
-        echo "[!] Error: Parent directory $TARGET_PARENT does not exist."
-        exit 1
-    fi
-
-    if [ -d "$TARGET_DIR" ]; then
-        echo "[!] Target directory $TARGET_DIR already exists. Skipping move."
-    else
-        echo "[+] Moving repo to: $TARGET_DIR"
-        # Copy with sudo to bypass read permissions
-        sudo cp -a "$CURRENT_DIR" "$TARGET_DIR"
-        # Fix ownership on the destination immediately
-        sudo chown -R "$REAL_USER:$REAL_USER" "$TARGET_DIR"
-        # Remove the old directory
-        sudo rm -rf "$CURRENT_DIR"   
-             
-        # Restore ownership to the standard user
-        if [ "$EUID" -ne 0 ]; then
-            sudo chown -R "$REAL_USER:$REAL_USER" "$TARGET_DIR"
-        else
-            chown -R "$REAL_USER:$REAL_USER" "$TARGET_DIR"
-        fi
-        
-        echo ""
-        echo "✅ Setup Complete!"
-        echo "   Please change directory: cd $TARGET_DIR"
-    fi
-else
-    echo ""
-    echo "✅ Execution Complete!"
-fi
+echo ""
+echo "✅ Setup Complete!"
