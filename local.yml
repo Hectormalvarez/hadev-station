@@ -5,6 +5,29 @@
   vars_files:
     - config.yml
 
+  # Runs before every role so third-party signing keys are never stale when
+  # apt cache updates execute (prevents NO_PUBKEY failures breaking the run)
+  pre_tasks:
+    - name: Ensure apt keyrings directory exists
+      become: true
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+      tags: [always]
+
+    - name: Refresh third-party apt repository signing keys
+      become: true
+      get_url:
+        url: "{{ item.url }}"
+        dest: "{{ item.dest }}"
+        mode: '0644'
+        force: true
+      loop:
+        - url: https://apt.releases.hashicorp.com/gpg
+          dest: /etc/apt/keyrings/hashicorp.asc
+      tags: [always]
+
   roles:
     - role: core
       tags: [core]
