@@ -4,7 +4,7 @@
   apt:
     name:
       - docker.io
-      - docker-compose
+      - docker-compose-v2
       - python3-docker
       - python3-pip
     state: present
