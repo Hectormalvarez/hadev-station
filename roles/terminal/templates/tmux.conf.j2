@@ -1,0 +1,80 @@
+# ==============================================================================
+# tmux Configuration
+# Managed by ansible (hadev-station). Manual edits will be overwritten.
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# General
+# ------------------------------------------------------------------------------
+# Truecolor + 256-color support
+set -g default-terminal "tmux-256color"
+set -ga terminal-overrides ",*256col*:Tc"
+
+# Large scrollback history
+set -g history-limit 50000
+
+# Faster key response (lower escape timeout)
+set -sg escape-time 10
+
+# Enable focus events (needed by editor autoread / autoreload tooling)
+set -g focus-events on
+
+# Resize windows only when the smaller client is viewing them
+setw -g aggressive-resize on
+
+# ------------------------------------------------------------------------------
+# Mouse
+# ------------------------------------------------------------------------------
+set -g mouse on
+
+# ------------------------------------------------------------------------------
+# Vi Mode / Copy Mode
+# ------------------------------------------------------------------------------
+setw -g mode-keys vi
+
+# Vi-style selection and yank (yanks to system clipboard via xclip)
+bind -T copy-mode-vi v send -X begin-selection
+bind -T copy-mode-vi V send -X select-line
+bind -T copy-mode-vi y send -X copy-pipe-and-cancel "xclip -in -selection clipboard"
+
+# ------------------------------------------------------------------------------
+# Key Bindings
+# ------------------------------------------------------------------------------
+# Easier split keys: | horizontal, - vertical (retain current working directory)
+bind | split-window -h -c "#{pane_current_path}"
+bind - split-window -v -c "#{pane_current_path}"
+unbind '"'
+unbind %
+
+# New windows and panes open in the current working directory
+bind c new-window -c "#{pane_current_path}"
+
+# Reload configuration
+bind r source-file ~/.tmux.conf \; display "Reloaded tmux.conf"
+
+# ------------------------------------------------------------------------------
+# Windows & Panes
+# ------------------------------------------------------------------------------
+# Start window/pane numbering at 1 (easier to reach on keyboard)
+set -g base-index 1
+setw -g pane-base-index 1
+
+# Renumber windows sequentially when one is closed
+set -g renumber-windows on
+
+# ------------------------------------------------------------------------------
+# Status Bar
+# ------------------------------------------------------------------------------
+set -g status-position bottom
+set -g status-interval 60
+set -g status-style "bg=colour238,fg=colour253"
+
+set -g status-left "#[fg=colour81,bold] #S #[default]"
+set -g status-right "#[fg=colour244] %d/%m #[fg=colour253] %H:%M #[default] "
+
+# ------------------------------------------------------------------------------
+# Plugin Manager (TPM)
+# ------------------------------------------------------------------------------
+# Uncomment the line below after installing TPM to ~/.tmux/plugins/tpm
+# The TPM block must always be the last line in the config.
+# run-shell ~/.tmux/plugins/tpm/tpm
