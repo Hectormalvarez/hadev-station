@@ -3,6 +3,13 @@
   template:
     src: bashrc_extras.j2
     dest: "{{ ansible_user_dir }}/.bashrc_extras"
+  tags: [terminal, dotfiles]
+
+- name: Template tmux configuration
+  template:
+    src: tmux.conf.j2
+    dest: "{{ ansible_user_dir }}/.tmux.conf"
+  tags: [terminal, dotfiles, tmux]
 
 - name: Ensure source ~/.bashrc_extras in .bashrc
   lineinfile:
