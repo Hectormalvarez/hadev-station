@@ -24,6 +24,7 @@ The project is organized into roles that handle specific aspects of the workstat
 
 ### Terminal Role
 - **Shell Enhancements:** Additional terminal configuration and improvements.
+- **tmux:** Deploys a managed `~/.tmux.conf` with sensible defaults (mouse support, vi copy mode, 256-color/truecolor, custom status bar). Structured so the TPM plugin manager can be enabled later.
 
 ### Docker Role
 - **Container Tools:** Docker and related containerization tools.
