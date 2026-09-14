@@ -1,17 +1,17 @@
 # Sprint — Run Confidence
 
 **Story:** US-003 — Failure & recovery UX for `setup.sh` (see `docs/stories/US-003.md`)
-**Status:** Planned
+**Status:** Shipped (commit 6f37814)
 
 ## Tasks
 
 | # | Task | Covers | Depends on | Status |
 |---|------|--------|------------|--------|
-| T1 | Friendly playbook-failure message: what failed, a concrete next step, and a "safe to re-run" reassurance — raw Ansible output stays visible beneath it | AC 1, 3 | — | Pending |
-| T2 | Ansible-install failure message: name the install step and its likely cause (e.g. no network) instead of a silent apt error | AC 2 | — | Pending |
-| T3 | Broken-config message: when `config.yml` cannot be used, tell the user that file is the problem and where it lives | AC 5 | — | Pending |
-| T4 | Exit discipline: every failure path exits non-zero and never prints the success line | AC 4 | — | Pending |
-| T5 | Verification matrix: shellcheck clean, `--syntax-check` passes, containerized integration test green, AC-by-AC walkthrough | all | T1–T4 | Pending |
+| T1 | Friendly playbook-failure message: what failed, a concrete next step, and a "safe to re-run" reassurance — raw Ansible output stays visible beneath it | AC 1, 3 | — | Done — `report_failure()` ERR trap; QA sandbox tests 1 & 3 |
+| T2 | Ansible-install failure message: name the install step and its likely cause (e.g. no network) instead of a silent apt error | AC 2 | — | Done — `CURRENT_STEP` in `install_ansible`; QA test 2 (stubbed sudo) |
+| T3 | Broken-config message: when `config.yml` cannot be used, tell the user that file is the problem and where it lives | AC 5 | — | Done — PyYAML check via `/usr/bin/python3`; QA test 4 |
+| T4 | Exit discipline: every failure path exits non-zero and never prints the success line | AC 4 | — | Done — trap re-raises original code (exit 1/4/100 verified) |
+| T5 | Verification matrix: shellcheck clean, `--syntax-check` passes, containerized integration test green, AC-by-AC walkthrough | all | T1–T4 | Done — shellcheck 0.10.0 clean; docker build ok=39 failed=0; 6 QA tests |
 
 ## Dependency map
 
@@ -20,8 +20,8 @@ T1–T4 are independent of each other; T5 runs last against the finished set.
 ## Risks
 
 - **R1 (RESOLVED — ADR-002):** Full idempotency audit confirms the playbook is convergent — re-run safety is real. Caveat verified: `~/.bashrc_extras` and `~/.tmux.conf` are regenerated every run, so the "safe to re-run" message must not promise hand-edit preservation.
-- **R2:** Messages must not over-claim diagnosis. We are not parsing Ansible output, so wording must stay honest: name *which step* failed, never pretend to know the root cause.
-- **R3:** No CI enforcement exists yet (backlog US-006); verification is manual + containerized until that lands.
+- **R2 (RESOLVED):** Messages name only the failed *step*; no output parsing, no root-cause claims; config-parse stderr suppressed to avoid echoing personal data.
+- **R3 (OPEN):** No CI enforcement exists yet (backlog US-006); verification was manual + containerized for this story. Shellcheck is not installed on the workstation (QA used a static binary in /tmp) — US-006 would close this.
 
 ---
 
