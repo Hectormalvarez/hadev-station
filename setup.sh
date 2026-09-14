@@ -127,6 +127,8 @@ KNOWN_OPTIONS=(
     --tags -t --skip-tags --limit -l
     --check -C --diff -D --step --start-at-task
     --vault-id --vault-password-file
+    -e --extra-vars -i --inventory -c --connection
+    -b --become --become-user -u --user --forks
     -v -vv -vvv -vvvv
 )
 
@@ -136,15 +138,19 @@ KNOWN_OPTIONS=(
 # distinct from config (1) and Ansible (4+) failures — regardless of machine
 # state, without installing Ansible or touching config.yml.
 validate_args() {
-    local arg opt
+    local arg opt name
     for arg in "$@"; do
         case "$arg" in
             "") continue ;;
             -*) ;;
             *) continue ;;
         esac
+        # Judge equals-form options by their base name (--tags=dotfiles counts
+        # as --tags); values are still never validated, and forwarding stays
+        # byte-exact since we only inspect copies of the arguments.
+        name="${arg%%=*}"
         for opt in "${KNOWN_OPTIONS[@]}"; do
-            [[ $arg == "$opt" ]] && continue 2
+            [[ $name == "$opt" ]] && continue 2
         done
         echo "Unrecognized option: $arg"
         echo "If this is a valid ansible-playbook option, invoke ansible-playbook directly:"
