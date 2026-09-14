@@ -27,7 +27,8 @@ Candidate stories surfaced during US-001's pipeline and later sessions. None are
 
 ## US-009 — Initialize memory bank
 
-**Source:** Project rules; no `memory-bank/` directory exists yet.
+**Source:** Project rules; no `memory-bank/` directory existed yet.
 **Summary:** Create the memory bank structure from the codebase, capturing ADR-001, the tag taxonomy, and the feature-pipeline conventions.
 **Why:** Session continuity for future work.
+**Status:** Done — `memory-bank/` initialized (projectbrief, productContext, systemPatterns, techContext, activeContext, progress).
 
