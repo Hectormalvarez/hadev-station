@@ -1,19 +1,19 @@
 # Sprint — Run Confidence III
 
 **Stories:** US-002 — Pre-flight summary & destructive-run confirmation · US-005 — Post-run change summary (see `docs/stories/`)
-**Status:** Planned (owner granted standing approval to run both pipelines to close-out)
+**Status:** Shipped (commits 61f7489, 41e731e)
 
 ## Tasks
 
 | # | Story | Task | Covers | Depends on | Status |
 |---|-------|------|--------|------------|--------|
-| T1 | US-002 | Arg pre-parse in Main: strip `--yes` into `PREFLIGHT_YES` (script-consumed, never forwarded — ansible has no such option), forward the rest; add `--yes` to `KNOWN_OPTIONS` | AC 4 | — | Pending |
-| T2 | US-002 | `run_plan()`: derive the run area and a dotfiles-touch flag from the forwarded tags; a missing/dangling `--tags` value defaults to the safe full-run interpretation | AC 1, edge | — | Pending |
-| T3 | US-002 | `pre_flight()`: print the run plan before every mutating run; `y/N` gate **only** when the run regenerates the playbook-managed dotfiles; `--yes` bypasses; no TTY → abort with `--yes` hint | AC 2, 3, 6 | T2 | Pending |
-| T4 | US-002 | Parse-only short-circuit: `--syntax-check`/`--list-tags`/`--list-hosts` get no summary and no prompt | AC 5 | T3 | Pending |
-| T5 | US-005 | `run_playbook()` mutating branch tees ansible output to a mktemp recap file; ERR trap disarmed around the pipeline and failure handled explicitly, so the failure message is never printed twice | AC 1 | — | Pending |
-| T6 | US-005 | `summarize_run()`: parse `changed=N` from PLAY RECAP; `changed=0` → explicit "nothing changed", `changed>0` → "N change(s) applied to <area>", unparseable → generic success (never a wrong claim); recap file cleaned on success and in `report_failure` | AC 1, 2, 4 | T5 | Pending |
-| T7 | — | Verification matrix: shellcheck, sandbox stubs (accept/decline/`--yes`/non-TTY/parse-only/tag-combos/recap variants), host parse-only runs, docker integration test | all | T1–T6 | Pending |
+| T1 | US-002 | Arg pre-parse in Main: strip `--yes` into `PREFLIGHT_YES` (script-consumed, never forwarded — ansible has no such option), forward the rest; add `--yes` to `KNOWN_OPTIONS` | AC 4 | — | Done — QA: `--yes` absent from forwarded invocation; `--tagz` still exit 2 |
+| T2 | US-002 | `run_plan()`: derive the run area and a dotfiles-touch flag from the forwarded tags; a missing/dangling `--tags` value defaults to the safe full-run interpretation | AC 1, edge | — | Done — QA: area strings correct; dangling `--tags` aborts safely (non-TTY) |
+| T3 | US-002 | `pre_flight()`: print the run plan before every mutating run; `y/N` gate **only** when the run regenerates the playbook-managed dotfiles; `--yes` bypasses; no TTY → abort with `--yes` hint | AC 2, 3, 6 | T2 | Done — QA: real-pty prompt (n → abort, y → proceed); languages runs unprompted; non-TTY aborts |
+| T4 | US-002 | Parse-only short-circuit: `--syntax-check`/`--list-tags`/`--list-hosts` get no summary and no prompt | AC 5 | T3 | Done — QA: no summary on parse-only; host runs exit 0 |
+| T5 | US-005 | `run_playbook()` mutating branch tees ansible output to a mktemp recap file; ERR trap disarmed around the pipeline and failure handled explicitly, so the failure message is never printed twice | AC 1 | — | Done — QA: failure message count = 1, exit 4 preserved, raw error visible |
+| T6 | US-005 | `summarize_run()`: parse `changed=N` from PLAY RECAP; `changed=0` → explicit "nothing changed", `changed>0` → "N change(s) applied to <area>", unparseable → generic success (never a wrong claim); recap file cleaned on success and in `report_failure` | AC 1, 2, 4 | T5 | Done — QA: full ("5 change(s) applied to the full setup"), partial ("tags: dotfiles"), zero-change, and degrade cases all pass |
+| T7 | — | Verification matrix: shellcheck, sandbox stubs (accept/decline/`--yes`/non-TTY/parse-only/tag-combos/recap variants), host parse-only runs, docker integration test | all | T1–T6 | Done — shellcheck clean; docker build EXIT=0 |
 
 ## Dependency map
 
@@ -22,17 +22,21 @@ for the summary wording, so US-002 lands first. T7 runs last against both.
 
 ## Risks
 
-- **R1:** Prompting under sudo — `read` uses the inherited stdin (still the
-  TTY in the normal `sudo ./setup.sh` flow); non-TTY is detected and aborts
-  rather than hanging.
-- **R2:** PLAY RECAP parse fragility — mitigated by graceful degradation:
-  an unparseable recap yields the generic success line, never a false
-  "nothing changed".
-- **R3:** Recapping via a `| tee` pipeline would re-enter the ERR trap in the
-  pipeline subshell and print the failure message twice (US-003 advisory #1
-  made real) — the trap is disarmed around the pipeline and failure is
-  handled explicitly.
-- **R4:** No CI (US-006); verification is manual + containerized.
+- **R1 (RESOLVED):** Prompting under sudo — `read` uses the inherited stdin
+  (still the TTY in the normal `sudo ./setup.sh` flow); non-TTY is detected
+  and aborts rather than hanging. Verified with a real pty via `script(1)`.
+- **R2 (RESOLVED):** PLAY RECAP parse fragility — graceful degradation
+  verified: an unparseable recap yields the generic success line, never a
+  false "nothing changed".
+- **R3 (RESOLVED):** Recapping via a `| tee` pipeline would re-enter the ERR
+  trap in the pipeline subshell and print the failure message twice — trap
+  disarmed around the pipeline, failure handled explicitly; QA counted
+  exactly one failure message with the real exit code.
+- **R4 (RESOLVED for this sprint):** No CI (US-006) — verification was manual
+  + containerized; US-006 remains the structural fix.
+- **Advisory (review):** `run_plan` computes the area from `--tags` only —
+  `--skip-tags terminal` on a full run still prompts (conservative
+  over-prompt, never under-prompt). Future refinement.
 
 ---
 

@@ -12,6 +12,12 @@
 - Argument validation (US-004, shipped): unknown dash-prefixed options
   rejected with usage help + exit 2 before anything runs; documented options
   and values/arity forwarded untouched; equals-form supported.
+- Pre-flight UX (US-002, shipped): run plan before every mutating run;
+  `y/N` confirmation only when dotfiles would be regenerated; `--yes`
+  bypass; non-TTY destructive runs abort safely.
+- Post-run UX (US-005, shipped): "N change(s) applied to <area>" or
+  "nothing changed" from PLAY RECAP; graceful degradation; failure path
+  unaffected (single message, real exit code).
 - First-run bootstrap: creates `config.yml` from template, instructs, exits 0.
 - Parse-only runs skip sudo elevation.
 
@@ -20,10 +26,10 @@
 | Story | Status |
 |---|---|
 | US-001 tag cleanup | Approved/shipped |
-| US-002 pre-flight confirmation | Draft |
+| US-002 pre-flight confirmation | Approved/shipped |
 | US-003 failure & recovery UX | Approved/shipped |
 | US-004 argument discoverability | Approved/shipped |
-| US-005 post-run feedback | Draft |
+| US-005 post-run feedback | Approved/shipped |
 | US-006 CI checks (backlog) | Candidate |
 | US-007 tmux TPM (backlog) | Candidate |
 | US-008 extra tags (backlog, on demand) | Deferred by design |
@@ -32,12 +38,13 @@
 ## What's left / known issues
 
 - No CI (US-006 candidate) — lint/syntax/shellcheck unenforced.
-- US-002/US-004/US-005 drafted but not implemented.
-- Advisory only: possible double failure message on failing command
-  substitutions (US-003 review note).
+- Advisory: `run_plan` keys on `--tags` only (`--skip-tags` still prompts on
+  full runs — over-prompt, safe).
+- Advisory: possible double failure message on failing command
+  substitutions outside the playbook pipeline (US-003 review note).
 
 ## Known-good baseline
 
-`main` at US-004 close-out (last code commit `34ac591`); working tree clean;
-`bash -n`, shellcheck 0.10.0, `--syntax-check`, `ansible-lint` all clean;
-docker integration test EXIT=0.
+`main` at Run Confidence III close-out (last code commit `41e731e`); working
+tree clean; `bash -n`, shellcheck 0.10.0, `--syntax-check`, `ansible-lint`
+all clean; docker integration test EXIT=0.
