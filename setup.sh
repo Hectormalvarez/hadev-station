@@ -14,6 +14,8 @@ set -Eeuo pipefail
 #    3. Bootstrap config.yml from the example template.
 #    4. Execute the playbook, forwarding any extra arguments to Ansible.
 #    5. Report failures with a human-readable message (see report_failure).
+#    6. Reject unrecognized dash-prefixed options before anything runs
+#       (see validate_args / KNOWN_OPTIONS).
 #
 #  Run from anywhere:  ./setup.sh [extra ansible-playbook arguments]
 #  Common usage:       ./setup.sh --tags "dotfiles"
@@ -90,7 +92,8 @@ The script automatically:
   - runs the playbook with your user context injected
     (-e ansible_user_id / -e ansible_user_dir)
 
-All arguments are passed through to ansible-playbook untouched.
+Recognized options are passed through to ansible-playbook; unrecognized
+dash-prefixed options are rejected with this help.
 
 Common tags (limit the run to part of the setup):
   core           workspace dirs, SSH key, git config, custom scripts
@@ -110,6 +113,45 @@ Examples:
   ./setup.sh --list-tags          # show every available tag
   ./setup.sh --syntax-check       # validate the playbook without running it
 EOF
+}
+
+# Options accepted on the setup.sh command line (US-004). Name-level only:
+# option values and arity are never validated here, so a malformed option
+# (e.g. --tags with no value) is forwarded untouched and Ansible reports its
+# own error. Anything dash-prefixed but not listed is rejected before
+# anything runs. Extend this array (one entry per line) to accept more
+# ansible-playbook options.
+KNOWN_OPTIONS=(
+    -h --help
+    --syntax-check --list-tags --list-hosts --list-tasks
+    --tags -t --skip-tags --limit -l
+    --check -C --diff -D --step --start-at-task
+    --vault-id --vault-password-file
+    -v -vv -vvv -vvvv
+)
+
+# Reject unknown dash-prefixed options (US-004 AC 1). Non-dash arguments are
+# forwarded untouched (AC 4): only option names are judged, never values or
+# arity. Runs first in Main so garbage arguments fail fast with exit 2 —
+# distinct from config (1) and Ansible (4+) failures — regardless of machine
+# state, without installing Ansible or touching config.yml.
+validate_args() {
+    local arg opt
+    for arg in "$@"; do
+        case "$arg" in
+            "") continue ;;
+            -*) ;;
+            *) continue ;;
+        esac
+        for opt in "${KNOWN_OPTIONS[@]}"; do
+            [[ $arg == "$opt" ]] && continue 2
+        done
+        echo "Unrecognized option: $arg"
+        echo "If this is a valid ansible-playbook option, invoke ansible-playbook directly:"
+        echo "  ansible-playbook -i inventory local.yml $arg"
+        usage
+        exit 2
+    done
 }
 
 install_ansible() {
@@ -188,6 +230,8 @@ if [[ $# -ge 1 && ( $1 == "-h" || $1 == "--help" ) ]]; then
     usage
     exit 0
 fi
+
+validate_args "$@"
 
 command -v ansible >/dev/null || install_ansible
 
