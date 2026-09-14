@@ -32,9 +32,17 @@ cd "$SCRIPT_DIR"
 # never a root-cause claim, since we do not parse the failing command's output.
 # The raw error output stays visible above the message (US-003 / ADR-002).
 CURRENT_STEP="startup"
+# Set while a mutating playbook run is in flight; holds the mktemp file with
+# the ansible output that summarize_run() parses for the post-run summary.
+# Cleaned up on success and in report_failure().
+RECAP_FILE=""
 
 report_failure() {
     local exit_code=$?
+    if [[ -n $RECAP_FILE ]]; then
+        rm -f "$RECAP_FILE"
+        RECAP_FILE=""
+    fi
     echo ""
     echo "❌ Setup failed during: $CURRENT_STEP (exit code $exit_code)."
     case "$CURRENT_STEP" in
@@ -285,10 +293,48 @@ run_playbook() {
             "$@"
         return
     fi
-    as_root ansible-playbook -i inventory local.yml \
+    # Tee the output to a recap file so summarize_run() can report what
+    # changed (US-005). The ERR trap is disarmed around the pipeline on
+    # purpose: with set -E it would fire inside the pipeline's subshell AND
+    # again in the parent, printing the failure message twice. Failure is
+    # handled explicitly instead, so the reporter runs exactly once with the
+    # pipeline's real exit code.
+    RECAP_FILE="$(mktemp)"
+    trap - ERR
+    if as_root ansible-playbook -i inventory local.yml \
         -e "ansible_user_id=$REAL_USER" \
         -e "ansible_user_dir=$REAL_HOME" \
-        "$@"
+        "$@" 2>&1 | tee "$RECAP_FILE"; then
+        trap report_failure ERR
+    else
+        report_failure
+    fi
+}
+
+# Report what the run did (US-005): parse only the final PLAY RECAP line for
+# changed=N. changed=0 gets an explicit "nothing changed"; changes get
+# counted per area; an unparseable or missing recap degrades to the original
+# generic success line — the summary may be vague, never wrong.
+summarize_run() {
+    local recap="" changed=""
+    if [[ -n $RECAP_FILE && -f $RECAP_FILE ]]; then
+        recap="$(grep -A1 '^PLAY RECAP' "$RECAP_FILE" | tail -n 1)" || recap=""
+        if [[ -n $recap ]]; then
+            changed="$(sed -n 's/.*changed=\([0-9]*\).*/\1/p' <<<"$recap")" || changed=""
+        fi
+    fi
+    if [[ -n $RECAP_FILE ]]; then
+        rm -f "$RECAP_FILE"
+        RECAP_FILE=""
+    fi
+    echo ""
+    if [[ $changed == 0 ]]; then
+        echo "✅ Setup complete — nothing changed: $RUN_AREA is already up to date."
+    elif [[ -n $changed ]]; then
+        echo "✅ Setup complete — $changed change(s) applied to $RUN_AREA."
+    else
+        echo "✅ Setup Complete!"
+    fi
 }
 
 # ==============================================================================
@@ -331,5 +377,11 @@ fi
 
 run_playbook "${EXTRA_ARGS[@]}"
 
-echo ""
-echo "✅ Setup Complete!"
+# Parse-only runs keep the plain success line; mutating runs get the
+# post-run summary (RUN_AREA is only set on the mutating path).
+if [[ -n ${RUN_AREA:-} ]]; then
+    summarize_run
+else
+    echo ""
+    echo "✅ Setup Complete!"
+fi
