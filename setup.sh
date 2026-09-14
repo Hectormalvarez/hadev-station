@@ -112,6 +112,7 @@ Examples:
   ./setup.sh --tags "languages"   # only install language tooling
   ./setup.sh --list-tags          # show every available tag
   ./setup.sh --syntax-check       # validate the playbook without running it
+  ./setup.sh --yes                # skip the destructive-run confirmation
 EOF
 }
 
@@ -129,6 +130,7 @@ KNOWN_OPTIONS=(
     --vault-id --vault-password-file
     -e --extra-vars -i --inventory -c --connection
     -b --become --become-user -u --user --forks
+    --yes
     -v -vv -vvv -vvvv
 )
 
@@ -211,6 +213,66 @@ is_parse_only() {
     return 1
 }
 
+# Derive the run plan from the forwarded arguments: the area the run will
+# cover, and whether it will regenerate the playbook-managed dotfiles
+# (~/.bashrc_extras and ~/.tmux.conf — see ADR-002). Only full runs and the
+# dotfiles/terminal tags touch those files. A dangling --tags value cannot be
+# interpreted, so the safe default is the full-run interpretation.
+run_plan() {
+    local prev="" arg tags=""
+    RUN_TOUCHES_DOTFILES=0
+    for arg in "${EXTRA_ARGS[@]}"; do
+        case "$arg" in
+            --tags|-t) prev="tags" ;;
+            --tags=*) tags="${tags:+$tags,}${arg#--tags=}"; prev="" ;;
+            -t=*) tags="${tags:+$tags,}${arg#-t=}"; prev="" ;;
+            *)
+                if [[ $prev == "tags" ]]; then
+                    tags="${tags:+$tags,}$arg"
+                    prev=""
+                fi
+                ;;
+        esac
+    done
+    if [[ -z $tags || $prev == "tags" ]]; then
+        RUN_AREA="the full setup"
+        RUN_TOUCHES_DOTFILES=1
+    else
+        RUN_AREA="tags: $tags"
+        case ",$tags," in
+            *,dotfiles,*|*,terminal,*) RUN_TOUCHES_DOTFILES=1 ;;
+        esac
+    fi
+}
+
+# Show the plan before every mutating run and require explicit confirmation
+# only when the run will regenerate the playbook-managed dotfiles.
+# config.yml is never overwritten after the first-run bootstrap (which exits
+# before any pre-flight), so it needs no gate here. --yes skips the prompt;
+# with no interactive terminal, abort instead of hanging on read or
+# proceeding unconfirmed.
+pre_flight() {
+    echo "Run plan: $RUN_AREA will run."
+    if (( RUN_TOUCHES_DOTFILES )); then
+        echo "⚠️  ~/.bashrc_extras and ~/.tmux.conf are regenerated from templates;"
+        echo "   hand-edits to those two files will be lost."
+        if (( PREFLIGHT_YES )); then
+            echo "[+] --yes given — skipping confirmation."
+        elif [[ -t 0 ]]; then
+            local reply
+            read -r -p "Proceed? [y/N] " reply
+            case "$reply" in
+                y|Y|yes|YES|Yes) ;;
+                *) echo "Aborted — nothing was changed." ; exit 1 ;;
+            esac
+        else
+            echo "❌ No interactive terminal available to confirm this destructive run."
+            echo "   Re-run with --yes to proceed, or add tags that avoid the dotfiles."
+            exit 1
+        fi
+    fi
+}
+
 # Execute the playbook as root while injecting the original user context,
 # forwarding any additional arguments (e.g. --tags, --syntax-check).
 run_playbook() {
@@ -237,7 +299,20 @@ if [[ $# -ge 1 && ( $1 == "-h" || $1 == "--help" ) ]]; then
     exit 0
 fi
 
-validate_args "$@"
+# Split out --yes before validation: the script consumes it itself and never
+# forwards it to ansible (which has no such option). Everything else is
+# validated and forwarded exactly as given.
+EXTRA_ARGS=()
+PREFLIGHT_YES=0
+for arg in "$@"; do
+    if [[ $arg == "--yes" ]]; then
+        PREFLIGHT_YES=1
+    else
+        EXTRA_ARGS+=("$arg")
+    fi
+done
+
+validate_args "${EXTRA_ARGS[@]}"
 
 command -v ansible >/dev/null || install_ansible
 
@@ -247,7 +322,14 @@ echo "  Target User: $REAL_USER ($REAL_HOME)"
 echo "=============================================================================="
 
 ensure_config
-run_playbook "$@"
+
+if ! is_parse_only "${EXTRA_ARGS[@]}"; then
+    CURRENT_STEP="Pre-flight check"
+    run_plan
+    pre_flight
+fi
+
+run_playbook "${EXTRA_ARGS[@]}"
 
 echo ""
 echo "✅ Setup Complete!"
