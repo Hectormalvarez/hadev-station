@@ -1,17 +1,17 @@
 # Sprint — Run Confidence II
 
 **Story:** US-004 — Discoverability: wrong arguments get help, not an ansible error (see `docs/stories/US-004.md`)
-**Status:** Planned (human gate pending)
+**Status:** Shipped (commits 5b75357, 34ac591)
 
 ## Tasks
 
 | # | Task | Covers | Depends on | Status |
 |---|------|--------|------------|--------|
-| T1 | `validate_args()` in `setup.sh`: check every `-`-prefixed argument against a name-level allowlist; on a miss print a one-line "unrecognized option: X" message, then the usage help, and exit 2 — without installing Ansible or touching config | AC 1 | T2 | Pending |
-| T2 | Curate the allowlist: script-owned (`-h`, `--help`) + documented pass-through (`--syntax-check`, `--list-tags`, `--list-hosts`, `--tags`/`-t`) + common ansible-playbook options with aliases (`--check`/`-C`, `--diff`/`-D`, `--limit`/`-l`, `--skip-tags`, `--start-at-task`, `--step`, `--vault-id`, `--vault-password-file`, `-v` … `-vvvv`), as one commented array in `setup.sh` | AC 2 | — | Pending |
-| T3 | Guarantee forward-compat behavior: option *values* and arity are never validated (`--tags` with no value is forwarded untouched; ansible reports the error), non-dash arguments are forwarded untouched | AC 4 | — | Pending |
-| T4 | One-line help correction: line 93 "All arguments are passed through to ansible-playbook untouched" → reflects the validated contract (see R3 — needs human-gate approval as a scope deviation) | AC 2 | T1 | Pending |
-| T5 | Verification matrix: `bash -n`, shellcheck, `--help`/`-h` exit 0, `--syntax-check`/`--list-tags` unchanged, `--tagz` rejected with exit 2 + help shown, `--tags` alone forwarded (ansible's error surfaces), container integration test green | all | T1–T4 | Pending |
+| T1 | `validate_args()` in `setup.sh`: check every `-`-prefixed argument against a name-level allowlist; on a miss print a one-line "unrecognized option: X" message, then the usage help, and exit 2 — without installing Ansible or touching config | AC 1 | T2 | Done — QA test 1: exit 2, fail-fast proven (no config created, sudo log empty) |
+| T2 | Curate the allowlist: script-owned (`-h`, `--help`) + documented pass-through (`--syntax-check`, `--list-tags`, `--list-hosts`, `--tags`/`-t`) + common ansible-playbook options with aliases (`--check`/`-C`, `--diff`/`-D`, `--limit`/`-l`, `--skip-tags`, `--start-at-task`, `--step`, `--vault-id`, `--vault-password-file`, `-v` … `-vvvv`), as one commented array in `setup.sh` | AC 2 | — | Done — extended in 34ac591 with `-e --extra-vars -i --inventory -c --connection -b --become --become-user -u --user --forks` (review W1) |
+| T3 | Guarantee forward-compat behavior: option *values* and arity are never validated (`--tags` with no value is forwarded untouched; ansible reports the error), non-dash arguments are forwarded untouched | AC 4 | — | Done — QA byte-exact forwarding verified; `--tags` alone reaches ansible untouched |
+| T4 | One-line help correction: line 93 "All arguments are passed through to ansible-playbook untouched" → reflects the validated contract (see R3 — needs human-gate approval as a scope deviation) | AC 2 | T1 | Done — approved at human gate; corrected in 5b75357 |
+| T5 | Verification matrix: `bash -n`, shellcheck, `--help`/`-h` exit 0, `--syntax-check`/`--list-tags` unchanged, `--tagz` rejected with exit 2 + help shown, `--tags` alone forwarded (ansible's error surfaces), container integration test green | all | T1–T4 | Done — shellcheck clean; docker build EXIT=0 (ok=39 failed=0); 6 QA tests + post-review fix tests |
 
 ## Dependency map
 
@@ -20,18 +20,19 @@ independent; T5 runs last against the finished set.
 
 ## Risks
 
-- **R1:** The allowlist may false-reject a valid ansible-playbook option the
-  owner later needs. Mitigation: broad curated list incl. aliases; the error
-  message notes the direct `ansible-playbook` escape hatch; additions are a
-  one-line array change.
+- **R1 (RESOLVED — 34ac591):** The allowlist may false-reject a valid
+  ansible-playbook option the owner later needs. Fixed: `-e --extra-vars`,
+  `-i --inventory`, `-c --connection`, `-b --become`, `--become-user`,
+  `-u --user`, `--forks` added after code review; equals-form options
+  (`--tags=x`) now judge by base name; escape-hatch message retained for
+  anything else.
 - **R2:** Validation placement — must run before `install_ansible` and
   `ensure_config` so garbage args fail fast with exit 2 regardless of machine
   state.
-- **R3 (needs human-gate decision):** The story marks help content as
-  out-of-scope, but leaving "All arguments are passed through untouched" in
-  place after this change would make `--help` lie. T4 proposes the minimal
-  one-line correction; rejecting T4 keeps the story literally in-scope at the
-  cost of inaccurate help.
+- **R3 (RESOLVED):** The story marked help content as out-of-scope, but
+  leaving "All arguments are passed through untouched" in place would make
+  `--help` lie. Human gate approved the single-sentence correction at
+  development time; nothing else in the help text changed.
 - **R4:** No CI enforcement (US-006); verification is manual + containerized,
   same as US-003.
 
