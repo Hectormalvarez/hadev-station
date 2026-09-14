@@ -19,7 +19,7 @@ T1–T4 are independent of each other; T5 runs last against the finished set.
 
 ## Risks
 
-- **R1:** The "safe to re-run" promise assumes the playbook is idempotent across *all* roles — the Architect gate must confirm this before the message ships to users.
+- **R1 (RESOLVED — ADR-002):** Full idempotency audit confirms the playbook is convergent — re-run safety is real. Caveat verified: `~/.bashrc_extras` and `~/.tmux.conf` are regenerated every run, so the "safe to re-run" message must not promise hand-edit preservation.
 - **R2:** Messages must not over-claim diagnosis. We are not parsing Ansible output, so wording must stay honest: name *which step* failed, never pretend to know the root cause.
 - **R3:** No CI enforcement exists yet (backlog US-006); verification is manual + containerized until that lands.
 
