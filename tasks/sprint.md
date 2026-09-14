@@ -1,3 +1,43 @@
+# Sprint — Run Confidence III
+
+**Stories:** US-002 — Pre-flight summary & destructive-run confirmation · US-005 — Post-run change summary (see `docs/stories/`)
+**Status:** Planned (owner granted standing approval to run both pipelines to close-out)
+
+## Tasks
+
+| # | Story | Task | Covers | Depends on | Status |
+|---|-------|------|--------|------------|--------|
+| T1 | US-002 | Arg pre-parse in Main: strip `--yes` into `PREFLIGHT_YES` (script-consumed, never forwarded — ansible has no such option), forward the rest; add `--yes` to `KNOWN_OPTIONS` | AC 4 | — | Pending |
+| T2 | US-002 | `run_plan()`: derive the run area and a dotfiles-touch flag from the forwarded tags; a missing/dangling `--tags` value defaults to the safe full-run interpretation | AC 1, edge | — | Pending |
+| T3 | US-002 | `pre_flight()`: print the run plan before every mutating run; `y/N` gate **only** when the run regenerates the playbook-managed dotfiles; `--yes` bypasses; no TTY → abort with `--yes` hint | AC 2, 3, 6 | T2 | Pending |
+| T4 | US-002 | Parse-only short-circuit: `--syntax-check`/`--list-tags`/`--list-hosts` get no summary and no prompt | AC 5 | T3 | Pending |
+| T5 | US-005 | `run_playbook()` mutating branch tees ansible output to a mktemp recap file; ERR trap disarmed around the pipeline and failure handled explicitly, so the failure message is never printed twice | AC 1 | — | Pending |
+| T6 | US-005 | `summarize_run()`: parse `changed=N` from PLAY RECAP; `changed=0` → explicit "nothing changed", `changed>0` → "N change(s) applied to <area>", unparseable → generic success (never a wrong claim); recap file cleaned on success and in `report_failure` | AC 1, 2, 4 | T5 | Pending |
+| T7 | — | Verification matrix: shellcheck, sandbox stubs (accept/decline/`--yes`/non-TTY/parse-only/tag-combos/recap variants), host parse-only runs, docker integration test | all | T1–T6 | Pending |
+
+## Dependency map
+
+T1–T4 (US-002) are sequential-ish; US-005's T5–T6 reuse US-002's `RUN_AREA`
+for the summary wording, so US-002 lands first. T7 runs last against both.
+
+## Risks
+
+- **R1:** Prompting under sudo — `read` uses the inherited stdin (still the
+  TTY in the normal `sudo ./setup.sh` flow); non-TTY is detected and aborts
+  rather than hanging.
+- **R2:** PLAY RECAP parse fragility — mitigated by graceful degradation:
+  an unparseable recap yields the generic success line, never a false
+  "nothing changed".
+- **R3:** Recapping via a `| tee` pipeline would re-enter the ERR trap in the
+  pipeline subshell and print the failure message twice (US-003 advisory #1
+  made real) — the trap is disarmed around the pipeline and failure is
+  handled explicitly.
+- **R4:** No CI (US-006); verification is manual + containerized.
+
+---
+
+# Sprint — Run Confidence II (shipped)
+
 # Sprint — Run Confidence II
 
 **Story:** US-004 — Discoverability: wrong arguments get help, not an ansible error (see `docs/stories/US-004.md`)
